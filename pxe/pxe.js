@@ -1,8 +1,13 @@
 var dgram = require('dgram');
 
+if (!('SUDO_UID' in process.env)) {
+  console.log('SUDO_UID not in process.env; don\'t know how to drop privileges');
+  process.exit(1);
+}
+
 var s = dgram.createSocket('udp4');
 s.bind(67, function() {
-  process.setuid(1000);
+  process.setuid(parseInt(process.env.SUDO_UID));
 });
 
 s.on('message', function(msg, rinfo) {
@@ -10,11 +15,7 @@ s.on('message', function(msg, rinfo) {
       htype = msg.readUInt8(1),
       hlen = msg.readUInt8(2),
       hops = msg.readUInt8(3),
-      xid = msg.readUInt32BE(4),
-      chaddr1 = msg.readUInt32BE(28),
-      chaddr2 = msg.readUInt32BE(32),
-      chaddr3 = msg.readUInt32BE(36),
-      chaddr4 = msg.readUInt32BE(40),
+      xid = msg.slice(4, 8),
       magic = msg.readUInt32BE(236);
   var options = msg.slice(240);
 
@@ -33,7 +34,20 @@ s.on('message', function(msg, rinfo) {
     chaddr.push(msg.slice(28 + i, 28 + i + 1).toString('hex'));
   }
   chaddr = chaddr.join(':')
-  console.log('xid ' + xid +
-    ', chaddr ' + chaddr +
-    ', options ' + options.toString('hex'));
+  console.log('incoming: xid 0x' + xid.toString('hex') + ', chaddr ' + chaddr);
+
+  // check options
+  for (var i = 0, len = options.length; i < len;) {
+    var kind = options[i];
+    if (kind == 0) {
+      ++i;
+      continue;
+    } else if (kind == 255) {
+      break;
+    }
+
+    var len = options[++i];
+    console.log('option kind 0x' + kind.toString(16) + ' length ' + len);
+    i += len;
+  }
 });
