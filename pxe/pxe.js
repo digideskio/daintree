@@ -34,22 +34,68 @@ s.on('message', function(msg, rinfo) {
     chaddr.push(msg.slice(28 + i, 28 + i + 1).toString('hex'));
   }
   chaddr = chaddr.join(':')
-  console.log('incoming: xid 0x' + xid.toString('hex') + ', chaddr ' + chaddr);
 
   // check options
-  console.log('options length: ' + options.length);
-  for (var i = 0; i < options.length;) {
+  var optdict = {};
+  for (var i = 0, ilen = options.length; i < ilen;) {
     var kind = options[i++];
     if (kind == 0) {
-      console.log('pad');
       continue;
     } else if (kind == 255) {
-      console.log('peaceful end');
       break;
     }
 
     var len = options[i++];
-    console.log('option kind ' + kind + ' length ' + len);
+    optdict[kind] = options.slice(i, i + len);
     i += len;
   }
+
+  var requested = optdict[55];
+  if (!requested) {
+    console.log('doesn\'t look like pxe; no parameter request list');
+    return;
+  }
+
+  var pxe = 0;  // need 8
+  for (var j = 0, jlen = requested.length; j < jlen; ++j) {
+    if (requested[j] >= 128 && requested[j] <= 135) {
+      ++pxe;
+    }
+  }
+
+  if (pxe != 8) {
+    console.log('doesn\'t look like pxe; didn\'t request all pxe parameters');
+  }
+
+  var sysarch = optdict[93];
+  if (!sysarch) {
+    console.log('doesn\'t look like pxe; no sysarch');
+    return;
+  }
+
+  if (sysarch.readUInt16BE(0) != 0x0000) {
+    console.log('doesn\'t look like *our* pxe; wrong sysarch');
+    return;
+  }
+
+  var nii = optdict[94];
+  if (!nii) {
+    console.log('doesn\'t look like pxe; no nii');
+    return;
+  }
+
+  if (nii[0] != 0x01 || nii.readUInt16BE(1) != 0x0201) {
+    console.log('doesn\'t look like *our* pxe; wrong nii');
+    return;
+  }
+
+  if (!optdict[97]) {
+    console.log('doesn\'t look like pxe; no cmi');
+    return;
+  }
+
+  console.log('pxe request incoming: xid 0x' + xid.toString('hex') + ', chaddr ' + chaddr);
+
+  // offer some arbitrary IP for PXE
+
 });
