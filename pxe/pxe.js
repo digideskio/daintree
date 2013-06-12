@@ -37,17 +37,19 @@ s.on('message', function(msg, rinfo) {
   console.log('incoming: xid 0x' + xid.toString('hex') + ', chaddr ' + chaddr);
 
   // check options
-  for (var i = 0, len = options.length; i < len;) {
-    var kind = options[i];
+  console.log('options length: ' + options.length);
+  for (var i = 0; i < options.length;) {
+    var kind = options[i++];
     if (kind == 0) {
-      ++i;
+      console.log('pad');
       continue;
     } else if (kind == 255) {
+      console.log('peaceful end');
       break;
     }
 
-    var len = options[++i];
-    console.log('option kind 0x' + kind.toString(16) + ' length ' + len);
+    var len = options[i++];
+    console.log('option kind ' + kind + ' length ' + len);
     i += len;
   }
 });
