@@ -100,7 +100,7 @@ s.on('message', function(msg, rinfo) {
   // assume we're 192.168.99.20, router/DNS's 192.168.99.1
   // it'll get 192.168.99.220 (0x0xc0a863dc)
 
-  var response = new Buffer(329);
+  var response = new Buffer(336);
   response.writeUInt8(2, 0); // Boot Reply
   response.writeUInt8(1, 1); // ethernet
   response.writeUInt8(6, 2); // hw addr len
@@ -114,68 +114,71 @@ s.on('message', function(msg, rinfo) {
   response.writeUInt32BE(0, 24); // relay IP
   chaddr.copy(response, 28);
   response.fill(0, 44, 108); // server host name
+  response.write('dpxe', 44);
   response.fill(0, 108, 236); // boot file name
+  response.write('/boot.pxe', 108);
   response.writeUInt32BE(0x63825363, 236); // magic
 
-  response.writeUInt8(53, 237); // message type id
-  response.writeUInt8(2, 238); // (boot reply)
+  response.writeUInt8(53, 240); // message type id
+  response.writeUInt8(1, 241); // len
+  response.writeUInt8(2, 242); // (boot reply)
 
-  response.writeUInt8(54, 239); // dhcp server ID
-  response.writeUInt8(4, 240); // len
-  response.writeUInt32BE(0xc0a86314, 241); // this IP
+  response.writeUInt8(54, 243); // dhcp server ID
+  response.writeUInt8(4, 244); // len
+  response.writeUInt32BE(0xc0a86314, 245); // this IP
 
-  response.writeUInt8(51, 245); // lease time
-  response.writeUInt8(4, 246); // len
-  response.writeUInt32BE(864000, 247); // 10 days
+  response.writeUInt8(51, 249); // lease time
+  response.writeUInt8(4, 250); // len
+  response.writeUInt32BE(864000, 251); // 10 days
 
-  response.writeUInt8(58, 251); // renewal time value
-  response.writeUInt8(4, 252); // len
-  response.writeUInt32BE(432000, 253); // 5 days
+  response.writeUInt8(58, 255); // renewal time value
+  response.writeUInt8(4, 256); // len
+  response.writeUInt32BE(432000, 257); // 5 days
 
-  response.writeUInt8(59, 257); // rebinding time value
-  response.writeUInt8(4, 258); // len
-  response.writeUInt32BE(756000, 259); // 8 days, 18 hours
+  response.writeUInt8(59, 261); // rebinding time value
+  response.writeUInt8(4, 262); // len
+  response.writeUInt32BE(756000, 263); // 8 days, 18 hours
 
-  response.writeUInt8(1, 263); // subnet mask
-  response.writeUInt8(4, 264); // len
-  response.writeUInt32BE(0xffffff00, 265); // /24
+  response.writeUInt8(1, 267); // subnet mask
+  response.writeUInt8(4, 268); // len
+  response.writeUInt32BE(0xffffff00, 269); // /24
 
-  response.writeUInt8(3, 269); // router
-  response.writeUInt8(4, 270); // len
-  response.writeUInt32BE(0xc0a86301, 271); // 192.168.99.1
+  response.writeUInt8(3, 273); // router
+  response.writeUInt8(4, 274); // len
+  response.writeUInt32BE(0xc0a86301, 275); // 192.168.99.1
 
-  response.writeUInt8(6, 275); // DNS server
-  response.writeUInt8(4, 276); // len
-  response.writeUInt32BE(0xc0a86301, 277); // 192.168.99.1
+  response.writeUInt8(6, 279); // DNS server
+  response.writeUInt8(4, 280); // len
+  response.writeUInt32BE(0xc0a86301, 281); // 192.168.99.1
 
-  response.writeUInt8(15, 281); // domain name
-  response.writeUInt8(8, 282); // len
-  response.write('daintree', 283); // ibid
+  response.writeUInt8(15, 285); // domain name
+  response.writeUInt8(8, 286); // len
+  response.write('daintree', 287); // ibid
 
-  response.writeUInt8(28, 291); // broadcast address
-  response.writeUInt8(4, 292); // len
-  response.writeUInt32BE(0xc0a863ff, 293); // 192.168.99.255
+  response.writeUInt8(28, 295); // broadcast address
+  response.writeUInt8(4, 296); // len
+  response.writeUInt32BE(0xc0a863ff, 297); // 192.168.99.255
 
-  response.writeUInt8(28, 297); // NTP server addresses
-  response.writeUInt8(4, 298); // len
-  response.writeUInt32BE(0xc0a86301, 299); // 192.168.99.1
+  response.writeUInt8(42, 301); // NTP server addresses
+  response.writeUInt8(4, 302); // len
+  response.writeUInt32BE(0xc0a86301, 303); // 192.168.99.1
 
   // echo 93, 94, 97
-  response.writeUInt8(93, 300); // client sysarch
-  response.writeUInt8(2, 301); // len
-  sysarch.copy(response, 302);
+  response.writeUInt8(93, 307); // client sysarch
+  response.writeUInt8(2, 308); // len
+  sysarch.copy(response, 309);
 
-  response.writeUInt8(94, 304); // nii
-  response.writeUInt8(3, 305); // len
-  nii.copy(response, 306);
+  response.writeUInt8(94, 311); // nii
+  response.writeUInt8(3, 312); // len
+  nii.copy(response, 313);
 
-  response.writeUInt8(97, 309); // cmi
-  response.writeUInt8(17, 310); // len
-  cmi.copy(response, 311);
+  response.writeUInt8(97, 316); // cmi
+  response.writeUInt8(17, 317); // len
+  cmi.copy(response, 318);
 
-  response.writeUInt8(0, 328); // end!
+  response.writeUInt8(255, 335); // end!
 
-  s.send(response, 0, 329, 68, '0.0.0.0', function(err, bytes) {
+  s.send(response, 0, 336, 68, '0.0.0.0', function(err, bytes) {
     console.log('sent; err ' + err + ', bytes ' + bytes);
   });
 });
