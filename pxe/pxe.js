@@ -5,6 +5,63 @@ if (!('SUDO_UID' in process.env)) {
   process.exit(1);
 }
 
+var Bootp = {
+  options: {
+    PAD: 0,
+    SUBNET_MASK: 1,
+    ROUTER: 3,
+    DNS_SERVER: 6,
+    DOMAIN_NAME: 15,
+    BROADCAST: 28,
+    NTP_SERVERS: 42,
+    MESSAGE_TYPE: 53,
+    SERVER_ID: 54,
+    PARAMETER_REQUEST_LIST: 55,
+    RENEWAL_TIME: 58,
+    REBINDING_TIME: 59,
+    PXE_SYSARCH: 93,
+    PXE_NII: 94,
+    PXE_CMI: 97,
+    END: 255,
+  },
+  MAGIC: 0x63825363,
+  FLAGS_BROADCAST: 0x8000,
+  read: function (msg) {
+    if (msg.readUInt32BE(236) != Bootp.MAGIC) {
+      return null;
+    }
+
+    var r = {
+      op: msg.readUInt8(0),
+      htype: msg.readUInt8(1),
+      hlen: msg.readUInt8(2),
+      hops: msg.readUInt8(3),
+      xid: msg.readUInt32BE(4),
+      secs: msg.readUInt16BE(8),
+      flags: msg.readUInt16BE(10),
+      chaddr: msg.slice(28, 44),
+      options: {},
+    }
+
+    var options = msg.slice(240);
+
+    for (var i = 0, ilen = options.length; i < ilen;) {
+      var kind = options[i++];
+      if (kind == 0) {
+        continue;
+      } else if (kind == 255) {
+        break;
+      }
+
+      var len = options[i++];
+      r.options[kind] = options.slice(i, i + len);
+      i += len;
+    }
+
+    return r;
+  },
+};
+
 var s = dgram.createSocket('udp4');
 s.bind(67, function() {
   process.setuid(parseInt(process.env.SUDO_UID));
@@ -12,43 +69,13 @@ s.bind(67, function() {
 });
 
 s.on('message', function(msg, rinfo) {
-  var op = msg.readUInt8(0),
-      htype = msg.readUInt8(1),
-      hlen = msg.readUInt8(2),
-      hops = msg.readUInt8(3),
-      xid = msg.readUInt32BE(4),
-      secs = msg.readUInt16BE(8),
-      flags = msg.readUInt16BE(10),
-      chaddr = msg.slice(28, 44),
-      magic = msg.readUInt32BE(236);
-  var options = msg.slice(240);
-
-  if (magic != 0x63825363) {
-    console.log('rejecting bad client; incorrect magic');
-    return;
-  }
-
-  if (op != 1 || htype != 1 || hlen != 6 || hops != 0 || flags != 0x8000) {
+  var r = readBootp(msg);
+  if (r.op != 1 || r.htype != 1 || r.hlen != 6 || r.hops != 0 || r.flags != Bootp.FLAGS_BROADCAST) {
     console.log('rejecting bad client: wrong op/htype/hlen/hops/flags');
     return;
   }
 
-  // check options
-  var optdict = {};
-  for (var i = 0, ilen = options.length; i < ilen;) {
-    var kind = options[i++];
-    if (kind == 0) {
-      continue;
-    } else if (kind == 255) {
-      break;
-    }
-
-    var len = options[i++];
-    optdict[kind] = options.slice(i, i + len);
-    i += len;
-  }
-
-  var requested = optdict[55];
+  var requested = r.options[55];
   if (!requested) {
     console.log('doesn\'t look like pxe; no parameter request list');
     return;
@@ -65,7 +92,7 @@ s.on('message', function(msg, rinfo) {
     console.log('doesn\'t look like pxe; didn\'t request all pxe parameters');
   }
 
-  var sysarch = optdict[93];
+  var sysarch = r.options[93];
   if (!sysarch) {
     console.log('doesn\'t look like pxe; no sysarch');
     return;
@@ -76,7 +103,7 @@ s.on('message', function(msg, rinfo) {
     return;
   }
 
-  var nii = optdict[94];
+  var nii = r.options[94];
   if (!nii) {
     console.log('doesn\'t look like pxe; no nii');
     return;
@@ -87,7 +114,7 @@ s.on('message', function(msg, rinfo) {
     return;
   }
 
-  var cmi = optdict[97];
+  var cmi = r.options[97];
   if (!cmi) {
     console.log('doesn\'t look like pxe; no cmi');
     return;
@@ -107,7 +134,7 @@ s.on('message', function(msg, rinfo) {
   response.writeUInt8(0, 3); // hops
   response.writeUInt32BE(xid, 4);
   response.writeUInt16BE(secs, 8);
-  response.writeUInt16BE(0x8000, 10); // bootp flags
+  response.writeUInt16BE(Bootp.FLAGS_BROADCAST, 10); // bootp flags
   response.writeUInt32BE(0, 12); // client IP
   response.writeUInt32BE(0xc0a863dc, 16); // your (client) IP
   response.writeUInt32BE(0xc0a86314, 20); // next server IP
@@ -117,7 +144,7 @@ s.on('message', function(msg, rinfo) {
   response.write('dpxe', 44);
   response.fill(0, 108, 236); // boot file name
   response.write('/boot.pxe', 108);
-  response.writeUInt32BE(0x63825363, 236); // magic
+  response.writeUInt32BE(Bootp.MAGIC, 236); // magic
 
   response.writeUInt8(53, 240); // message type id
   response.writeUInt8(1, 241); // len
