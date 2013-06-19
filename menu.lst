@@ -1,0 +1,13 @@
+# This file is part of Daintree.
+# Copyright 2013-2015 Yuki Izumi
+# See LICENSE at the base of the distribution.
+
+default 0
+timeout 3
+color light-green/green white/green
+
+title daintree
+root (hd0,0)
+kernel /daintree
+boot
+
