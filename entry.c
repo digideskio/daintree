@@ -2,8 +2,15 @@
 
 #include "arch.h"
 #include "cons.h"
+#include "multiboot.h"
 
-void entry(void) {
+//void entry(multiboot_info_t *multiboot) {
+void entry() {
+  //if (multiboot == 0) {
+    puts("no multiboot info. halting.");
+    //return;
+  //}
+
   clear();
   puts(
       "here we are\n2 hi\n3 ok\n4he\n5\n6\n7\n8\n9\n10\n11\n12\n13\n14\n15\n"

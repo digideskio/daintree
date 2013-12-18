@@ -1,3 +1,5 @@
 Kernel-level interpreter.  Give access to memory, etc., but guarded.  Can still
 use pre-emptive multitasking, etc.  (May need for drivers, etc.)  Paging may
 not be necessary dep. on how we guard memory access/code execution.
+
+Consider: Terra, LuaJIT.

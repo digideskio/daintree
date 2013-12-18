@@ -5,6 +5,16 @@
 
 .globl entry
 entry:
+    xor %ecx, %ecx
+
+    cmp $0x2badb002, %eax
+    jne .nomulti
+
+    mov %ebx, %ecx
+
+.nomulti:
+
+    push %ecx
     jmp _entry
     hlt
 
