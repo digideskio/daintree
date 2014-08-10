@@ -1,5 +1,6 @@
 // daintree
 
+#include "arch.h"
 #include "cons.h"
 #include "mem.h"
 
@@ -19,11 +20,11 @@ void scroll() {
   }
 
   while (vy >= 25) {
-    for (uint16_t i = 0; i < 80 * 24; ++i) {
+    for (int i = 0; i < 80 * 24; ++i) {
       vmem[i * 2] = vmem[i * 2 + 160];
       vmem[i * 2 + 1] = vmem[i * 2 + 161];
     }
-    for (uint16_t i = 80 * 24; i < 80 * 25; ++i) {
+    for (int i = 80 * 24; i < 80 * 25; ++i) {
       vmem[i * 2] = ' ';
       vmem[i * 2 + 1] = 0x07;
     }
@@ -61,6 +62,30 @@ void puts(char const *s) {
   }
 }
 
+void putn(int n) {
+  int orig = n;
+  int base = 10, index = 1, digits = 1;
+  
+  while (n / index >= base) {
+    index *= base;
+    ++digits;
+  }
+
+  do {
+    int c = n / index;
+    n -= c * index;
+
+    if (!c && index > orig && index != 1) {
+      putc('0');
+    } else {
+      putc(c + '0');
+    }
+
+    index /= base;
+    --digits;
+  } while (index >= 1);
+}
+
 void vaputf(char **p, char const *fmt, va_list ap) {
   // needs malloc
 }
@@ -75,12 +100,26 @@ void putf(char const *fmt, ...) {
 }
 
 void clear(void) {
-  for (uint16_t i = 0; i < 80 * 25; ++i) {
+  for (int i = 0; i < 80 * 25; ++i) {
     vmem[i * 2] = ' ';
     vmem[i * 2 + 1] = 0x07;
   }
   vx = vy = 0;
   cursor();
+}
+
+char readch(void) {
+  while (1) {
+    uint8_t status = in8(0x64);
+    if ((status & 0x01) == 0x01) {
+      break;
+    }
+  }
+
+  uint8_t scancode = in8(0x60);
+  putn((int) scancode);
+  puts("\n");
+  return scancode;
 }
 
 // vim: set sw=2 cc=80 et:

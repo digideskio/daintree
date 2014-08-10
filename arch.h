@@ -12,6 +12,7 @@ typedef uint32_t *va_list;
 #define va_start(ap, p) (ap = (uint32_t *)&p)
 #define va_arg(ap, t) ((t)*(++(ap)))
 
+uint8_t in8(uint16_t port);
 void out8(uint16_t port, uint8_t data);
 
 #endif
