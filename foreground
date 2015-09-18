@@ -1,0 +1,5 @@
+tell application "System Events"
+	tell process "qemu-system-i386"
+		set frontmost to true
+	end tell
+end tell

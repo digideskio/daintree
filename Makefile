@@ -1,3 +1,6 @@
+CC = i686-elf-gcc
+LD = i686-elf-ld
+AS = i686-elf-as
 CFLAGS := -O0 -ansi -std=gnu99 -g -m32 -nodefaultlibs -nostdinc -nostdlib \
 	-static -ffreestanding -fleading-underscore -fno-builtin \
 	-fno-stack-protector -fomit-frame-pointer -Wall -Wcast-qual -Wextra \
@@ -19,7 +22,9 @@ IMGFILE := daintree.img
 all: $(TARGET)-copy
 
 run: $(TARGET)-copy
-	qemu-system-i386 -boot order=c -hda $(IMGFILE) -smp 1,cores=2 -net none -s
+	qemu-system-i386 -boot order=c -drive file=$(IMGFILE),index=0,media=disk,format=raw -smp 1,cores=2 -net none -s & \
+	osascript -e "`cat foreground `"; \
+	wait
 
 debug:
 	gdb $(TARGET) --eval-command='target remote localhost:1234'
