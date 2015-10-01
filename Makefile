@@ -34,8 +34,8 @@ $(TARGET)-copy: $(TARGET)
 	MTOOLSRC=mtoolsrc mcopy -D o $(TARGET) $(COPYDEST)
 	MTOOLSRC=mtoolsrc mcopy -D o $(MENU) $(MENUDEST)
 
-$(TARGET): $(OBJS) $(LDFILE) $(BUILDDIR)/parse.tab.o $(BUILDDIR)/lex.yy.o
-	$(LD) $(LDFLAGS) -T$(LDFILE) $(OBJS) $(BUILDDIR)/parse.tab.o $(BUILDDIR)/lex.yy.o -o $(TARGET)
+$(TARGET): $(OBJS) $(LDFILE) $(BUILDDIR)/parse.tab.o $(BUILDDIR)/lex.sv.o
+	$(LD) $(LDFLAGS) -T$(LDFILE) $(OBJS) $(BUILDDIR)/parse.tab.o $(BUILDDIR)/lex.sv.o -o $(TARGET)
 
 $(BUILDDIR)/%.c.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
@@ -46,16 +46,15 @@ $(BUILDDIR)/%.s.o: %.s
 $(BUILDDIR)/parse.tab.o: $(BUILDDIR)/parse.tab.c
 	$(CC) $(CFLAGS) -I. -c $< -o $@
 
-$(BUILDDIR)/lex.yy.o: $(BUILDDIR)/lex.yy.c $(BUILDDIR)/parse.tab.c
-	$(CC) $(CFLAGS) -I. -c $(BUILDDIR)/lex.yy.c -o $@
+$(BUILDDIR)/lex.sv.o: $(BUILDDIR)/lex.sv.c $(BUILDDIR)/parse.tab.c
+	$(CC) $(CFLAGS) -I. -Ibuild -DSONAVARA_NO_SELF_CHAIN -c $(BUILDDIR)/lex.sv.c -o $@
 
 $(BUILDDIR)/parse.tab.c: parse.y
 	$(BISON) -v --report=state -d $<
 	mv parse.tab.? $(BUILDDIR)/
 
-$(BUILDDIR)/lex.yy.c: lex.l
-	flex -t $< > $@
+$(BUILDDIR)/lex.sv.c: lex.sv
+	sonavara < $< > $@
 
 clean:
-	-rm $(OBJS) $(TARGET)
-
+	-rm $(OBJS) $(TARGET) $(BUILDDIR)/{parse.tab.o,parse.tab.c,lex.sv.c,lex.sv.o}
