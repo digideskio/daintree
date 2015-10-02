@@ -40,7 +40,7 @@ $(TARGET): $(OBJS) $(LDFILE)
 
 -include $(DEPS)
 
-$(BUILDDIR)/%.c.o: %.c $(BUILDDIR)/parse.tab.o
+$(BUILDDIR)/%.c.o: %.c
 	$(CC) $(CFLAGS) -I. -c $< -o $@ -MMD
 
 $(BUILDDIR)/%.s.o: %.s
@@ -49,8 +49,10 @@ $(BUILDDIR)/%.s.o: %.s
 $(BUILDDIR)/parse.tab.o: $(BUILDDIR)/parse.tab.c
 	$(CC) $(CFLAGS) -I. -c $< -o $@ -MMD
 
-$(BUILDDIR)/lex.sv.o: $(BUILDDIR)/lex.sv.c $(BUILDDIR)/parse.tab.c
+$(BUILDDIR)/lex.sv.o: $(BUILDDIR)/lex.sv.c
 	$(CC) $(CFLAGS) -I. -Ibuild -DSONAVARA_NO_SELF_CHAIN -c $(BUILDDIR)/lex.sv.c -o $@ -MMD
+
+$(BUILDDIR)/parse.tab.h: $(BUILDDIR)/parse.tab.c
 
 $(BUILDDIR)/parse.tab.c: parse.y
 	$(BISON) -v --report=state -d $<
