@@ -11,10 +11,17 @@ struct expr {
     enum expr_type {
         EXPR_NUMBER,
         EXPR_IDENTIFIER,
+        EXPR_BINARY,
     } type;
     union {
         int number;
         char *identifier;
+        struct {
+            enum expr_binary_type {
+                EXPR_BINARY_PLUS,
+            } type;
+            struct expr *lhs, *rhs;
+        } binary;
     };
 };
 
@@ -47,6 +54,7 @@ struct stmt_list {
 };
 
 void stmt_list_append(struct stmt_list **list, struct stmt const *stmt);
+void stmt_list_free(struct stmt_list *list);
 
 typedef struct {
     struct stmt_list *stmt_list;

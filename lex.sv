@@ -34,6 +34,9 @@ print
 =
     return EQUALS;
 
+\+
+    return PLUS;
+
 [0-9]+
     context->number = atoi(match);
     return NUMBER;

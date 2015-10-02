@@ -5,6 +5,7 @@
 #include <mem.h>
 
 #define VAL_IS_NUMBER(v) ((v).raw & 1)
+#define VAL_EXTRACT_NUMBER(v) ((v).raw >> 1)
 
 static val context_get(Context *context, char const *key) {
     return (val) (uint32_t) dict_search(context->env, key);
@@ -24,7 +25,16 @@ static val eval(struct expr const *expr, Context *context) {
         return context_get(context, expr->identifier);
     case EXPR_NUMBER:
         return val_number(expr->number);
+    case EXPR_BINARY:
+        {
+            val lhs = eval(expr->binary.lhs, context);
+            val rhs = eval(expr->binary.rhs, context);
+            return val_number(
+                VAL_EXTRACT_NUMBER(lhs) +
+                VAL_EXTRACT_NUMBER(rhs));
+        }
     default:
+        /* ?? */
         return (val) (uint32_t) 0;
     }
 }
@@ -40,7 +50,7 @@ static void execute(struct stmt const *stmt, Context *context) {
         {
             val v = eval(stmt->print, context);
             if (VAL_IS_NUMBER(v)) {
-                putf("%d\n", v.raw >> 1);
+                putf("%d\n", VAL_EXTRACT_NUMBER(v));
             } else {
                 putf("??\n");
             }
@@ -53,6 +63,11 @@ Context *context_new(void) {
     Context *context = malloc(sizeof(*context));
     context->env = dict_create(stringdict_crc, free);
     return context;
+}
+
+void context_free(Context *context) {
+    dict_free(context->env);
+    free(context);
 }
 
 void program_run(Program const *program, Context *context) {

@@ -17,6 +17,7 @@ typedef struct {
 } Context;
 
 Context *context_new(void);
+void context_free(Context *context);
 void program_run(Program const *program, Context *context);
 
 #endif

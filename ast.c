@@ -10,6 +10,11 @@ void expr_free(struct expr *expr) {
         free(expr->identifier);
         break;
 
+    case EXPR_BINARY:
+        expr_free(expr->binary.lhs);
+        expr_free(expr->binary.rhs);
+        break;
+
     default:
         /* do nothing */
         break;
@@ -27,6 +32,11 @@ struct expr *expr_copy(struct expr const *expr) {
         break;
     case EXPR_IDENTIFIER:
         copy->identifier = strdup(expr->identifier);
+        break;
+    case EXPR_BINARY:
+        copy->binary.type = expr->binary.type;
+        copy->binary.lhs = expr_copy(expr->binary.lhs);
+        copy->binary.rhs = expr_copy(expr->binary.rhs);
         break;
     }
 
@@ -48,6 +58,14 @@ struct expr *expr_number(int number) {
 struct expr *expr_identifier(char const *identifier) {
     struct expr *expr = expr_alloc(EXPR_IDENTIFIER);
     expr->identifier = strdup(identifier);
+    return expr;
+}
+
+struct expr *expr_binary(enum expr_binary_type type, struct expr const *lhs, struct expr const *rhs) {
+    struct expr *expr = expr_alloc(EXPR_BINARY);
+    expr->binary.type = type;
+    expr->binary.lhs = expr_copy(lhs);
+    expr->binary.rhs = expr_copy(rhs);
     return expr;
 }
 
@@ -108,6 +126,15 @@ void stmt_list_append(struct stmt_list **list, struct stmt const *stmt) {
     *list = malloc(sizeof(**list));
     (*list)->stmt = stmt_copy(stmt);
     (*list)->next = NULL;
+}
+
+void stmt_list_free(struct stmt_list *list) {
+    while (list) {
+        stmt_free(list->stmt);
+        struct stmt_list *next = list->next;
+        free(list);
+        list = next;
+    }
 }
 
 /* vim: set sw=4 et: */
