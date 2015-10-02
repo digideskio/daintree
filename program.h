@@ -12,6 +12,9 @@ union token {
     int identifier;
 };
 
+int yylex(void);
+void yyerror(Program *program, char const *message);
+
 #endif
 
 /* vim: set sw=4 et: */

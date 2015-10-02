@@ -1,7 +1,7 @@
 // daintree
 
 #include <arch.h>
-#include <cons.h>
+#include <console.h>
 #include <multiboot.h>
 
 void entry(multiboot_info_t *multiboot) {

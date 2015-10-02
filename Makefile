@@ -12,7 +12,7 @@ LDFLAGS := -melf_i386
 BUILDDIR := build
 TARGET := $(BUILDDIR)/daintree
 COPYDEST := C:/daintree
-CSRCS := entry.c cons.c mem.c arch.c string.c ctype.c
+CSRCS := entry.c console.c mem.c arch.c string.c ctype.c
 ASRCS := entry.s
 LDFILE := daintree.ld
 OBJS := $(CSRCS:%.c=$(BUILDDIR)/%.c.o) $(ASRCS:%.s=$(BUILDDIR)/%.s.o)
@@ -57,4 +57,4 @@ $(BUILDDIR)/lex.sv.c: lex.sv
 	sonavara < $< > $@
 
 clean:
-	-rm $(OBJS) $(TARGET) $(BUILDDIR)/{parse.tab.o,parse.tab.c,lex.sv.c,lex.sv.o}
+	-rm $(OBJS) $(TARGET) $(BUILDDIR)/{parse.tab.o,parse.tab.c,parse.tab.h,lex.sv.c,lex.sv.o}

@@ -1,7 +1,7 @@
 // daintree
 
-#ifndef __CONS_H__
-#define __CONS_H__
+#ifndef __CONSOLE_H__
+#define __CONSOLE_H__
 
 #include <arch.h>
 

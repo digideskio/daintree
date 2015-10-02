@@ -1,7 +1,7 @@
 // daintree
 
 #include <arch.h>
-#include <cons.h>
+#include <console.h>
 #include <mem.h>
 
 #define CURSOR_IDX 0x3d4
