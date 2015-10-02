@@ -31,17 +31,14 @@ print
     context->identifier = strdup(match);
     return IDENTIFIER;
 
-=
-    return EQUALS;
-
-\+
-    return PLUS;
-
 [0-9]+
     context->number = atoi(match);
     return NUMBER;
 
 [ \t]+
+
+.
+    return match[0];
 
 "
     BEGIN(string);

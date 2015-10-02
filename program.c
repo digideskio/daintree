@@ -92,7 +92,7 @@ static void execute(struct stmt const *stmt, Context *context) {
 
 Context *context_new(void) {
     Context *context = malloc(sizeof(*context));
-    context->env = dict_create(stringdict_crc, free);
+    context->env = dict_create(stringdict_crc, NULL);
     return context;
 }
 
