@@ -1,5 +1,5 @@
 %{
-    #include <program.h>
+    #include <ast.h>
 %}
 
 %define api.value.type {union token}
@@ -8,9 +8,10 @@
 %error-verbose
 
 %token END_OF_FILE 0 "$end"
-%token NL
+%token NL PRINT
 
 %type <stmt> stmt line
+%type <expr> expr
 
 %right EQUALS
 
@@ -21,7 +22,7 @@
 
 input:
     /* empty */
-  | input line { if ($2) { program->stmt = $2; } }
+  | input line { if ($2) { stmt_list_append(&program->stmt_list, $2); stmt_free($2); } }
 ;
 
 line_separator:
@@ -36,7 +37,13 @@ line:
 ;
 
 stmt:
-    IDENTIFIER EQUALS NUMBER { $$ = stmt_new($1, $3); free($1); }
+    IDENTIFIER EQUALS expr { $$ = stmt_assign($1, $3); free($1); expr_free($3); }
+  | PRINT expr { $$ = stmt_print($2); expr_free($2); }
+;
+
+expr:
+    NUMBER { $$ = expr_number($1); }
+  | IDENTIFIER { $$ = expr_identifier($1); free($1); }
 ;
 
 /* vim: set sw=4 et: */

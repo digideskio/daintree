@@ -3,31 +3,21 @@
 #ifndef __PROGRAM_H__
 #define __PROGRAM_H__
 
-struct lexer;
-extern struct lexer *active_lexer;
-struct lexer *lexer_start_str(char const *str);
+#include <arch.h>
+#include <ast.h>
+#include <dict.h>
 
-struct stmt {
-    char *identifier;
-    int number;
-};
-
-struct stmt *stmt_new(char const *ident, int num);
+typedef union {
+   uint32_t raw;
+   void *object;
+} val;
 
 typedef struct {
-    struct stmt *stmt;
-} Program;
+    struct dict *env;
+} Context;
 
-
-union token {
-    struct stmt *stmt;
-
-    char *identifier;
-    int number;
-};
-
-int yylex(void);
-void yyerror(Program *program, char const *message);
+Context *context_new(void);
+void program_run(Program const *program, Context *context);
 
 #endif
 

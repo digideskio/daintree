@@ -17,6 +17,8 @@ void entry(multiboot_info_t *multiboot) {
 
     clear();
     puts("daintree\n");
+
+    Context *context = context_new();
     
     while (1) {
         puts("> ");
@@ -26,11 +28,14 @@ void entry(multiboot_info_t *multiboot) {
         memset(&program, 0, sizeof(program));
         active_lexer = lexer_start_str(i);
         int r = yyparse(&program);
-        if (yyparse(&program) == 0 && program.stmt) {
-            putf("set %s to %d\n", program.stmt->identifier, program.stmt->number);
+        if (!r) {
+            program_run(&program, context);
         }
+
         free(i);
     }
+
+    context_free(context);
 
     asm volatile("hlt");
 }

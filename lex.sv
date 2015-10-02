@@ -1,5 +1,5 @@
 *raw
-    #include <program.h>
+    #include <ast.h>
     #include <parse.tab.h>
     #include <mem.h>
     #include <console.h>
@@ -23,6 +23,9 @@
     }
 
 *set context = union token
+
+print
+    return PRINT;
 
 [a-z]+
     context->identifier = strdup(match);
