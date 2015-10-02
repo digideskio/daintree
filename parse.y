@@ -28,6 +28,7 @@
 
 %nonassoc <identifier> IDENTIFIER
 %nonassoc <number> NUMBER
+%nonassoc <string> STRING
 
 %%
 
@@ -55,6 +56,7 @@ stmt:
 expr:
     NUMBER { $$ = expr_number($1); }
   | IDENTIFIER { $$ = expr_identifier($1); free($1); }
+  | STRING { $$ = expr_string($1); free($1); }
   | expr PLUS expr { $$ = expr_binary(EXPR_BINARY_PLUS, $1, $3); expr_free($1); expr_free($3); }
 ;
 

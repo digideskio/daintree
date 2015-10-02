@@ -43,4 +43,9 @@ print
 
 [ \t]+
 
+"[^"]*"
+    int len = strlen(match);
+    context->string = strndup(match + 1, len - 2);
+    return STRING;
+
 *# vim: set sw=4 et:

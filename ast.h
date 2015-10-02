@@ -11,11 +11,13 @@ struct expr {
     enum expr_type {
         EXPR_NUMBER,
         EXPR_IDENTIFIER,
+        EXPR_STRING,
         EXPR_BINARY,
     } type;
     union {
         int number;
         char *identifier;
+        char *string;
         struct {
             enum expr_binary_type {
                 EXPR_BINARY_PLUS,
@@ -29,6 +31,7 @@ void expr_free(struct expr *expr);
 struct expr *expr_copy(struct expr const *expr);
 struct expr *expr_number(int number);
 struct expr *expr_identifier(char const *identifier);
+struct expr *expr_string(char const *identifier);
 
 struct stmt {
     enum stmt_type {
@@ -68,6 +71,7 @@ union token {
     struct expr *expr;
 
     char *identifier;
+    char *string;
     int number;
 };
 

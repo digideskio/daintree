@@ -10,6 +10,10 @@ void expr_free(struct expr *expr) {
         free(expr->identifier);
         break;
 
+    case EXPR_STRING:
+        free(expr->string);
+        break;
+
     case EXPR_BINARY:
         expr_free(expr->binary.lhs);
         expr_free(expr->binary.rhs);
@@ -32,6 +36,9 @@ struct expr *expr_copy(struct expr const *expr) {
         break;
     case EXPR_IDENTIFIER:
         copy->identifier = strdup(expr->identifier);
+        break;
+    case EXPR_STRING:
+        copy->string = strdup(expr->string);
         break;
     case EXPR_BINARY:
         copy->binary.type = expr->binary.type;
@@ -58,6 +65,12 @@ struct expr *expr_number(int number) {
 struct expr *expr_identifier(char const *identifier) {
     struct expr *expr = expr_alloc(EXPR_IDENTIFIER);
     expr->identifier = strdup(identifier);
+    return expr;
+}
+
+struct expr *expr_string(char const *string) {
+    struct expr *expr = expr_alloc(EXPR_STRING);
+    expr->string = strdup(string);
     return expr;
 }
 
