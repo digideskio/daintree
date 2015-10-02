@@ -21,16 +21,15 @@ void entry(multiboot_info_t *multiboot) {
     while (1) {
         puts("> ");
         char *i = gets();
+
+        Program program;
+        memset(&program, 0, sizeof(program));
+        active_lexer = lexer_start_str(i);
+        int r = yyparse(&program);
+        putf("yyparse: %d\n", r);
+        putf("stmt: %x\n", program.stmt);
+        free(i);
     }
-
-    Program program;
-    memset(&program, 0, sizeof(program));
-
-    active_lexer = lexer_start_str("abc = 123\n");
-
-    int r = yyparse(&program);
-    putf("yyparse: %d\n", r);
-    putf("stmt: %x\n", program.stmt);
 
     asm volatile("hlt");
 }
