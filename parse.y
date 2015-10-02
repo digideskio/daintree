@@ -30,6 +30,11 @@
 %nonassoc <number> NUMBER
 %nonassoc <string> STRING
 
+%destructor { free($$); } <identifier>
+%destructor { free($$); } <string>
+%destructor { stmt_free($$); } <stmt>
+%destructor { expr_free($$); } <expr>
+
 %%
 
 input:
