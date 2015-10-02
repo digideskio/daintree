@@ -17,4 +17,4 @@ char readch(void);
 
 #endif
 
-// vim: set sw=2 cc=80 et:
+// vim: set sw=4 et:

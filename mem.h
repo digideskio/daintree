@@ -11,3 +11,5 @@ void *memcpy(void *dst, void const *src, uint32_t n);
 void *memset(void *dst, int c, uint32_t len);
 
 #endif
+
+// vim: set sw=4 et:
