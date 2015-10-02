@@ -9,8 +9,10 @@
     }
 
     void yyerror(Program *program, char const *message) {
-        puts(message);
+        putf("yyerror: %s\n", message);
     }
+
+*set context = union token
 
 [a-z]+
     return IDENTIFIER;

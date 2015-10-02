@@ -37,7 +37,7 @@ $(TARGET)-copy: $(TARGET)
 $(TARGET): $(OBJS) $(LDFILE) $(BUILDDIR)/parse.tab.o $(BUILDDIR)/lex.sv.o
 	$(LD) $(LDFLAGS) -T$(LDFILE) $(OBJS) $(BUILDDIR)/parse.tab.o $(BUILDDIR)/lex.sv.o -o $(TARGET)
 
-$(BUILDDIR)/%.c.o: %.c
+$(BUILDDIR)/%.c.o: %.c $(BUILDDIR)/parse.tab.o
 	$(CC) $(CFLAGS) -I. -c $< -o $@
 
 $(BUILDDIR)/%.s.o: %.s

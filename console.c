@@ -3,6 +3,7 @@
 #include <arch.h>
 #include <console.h>
 #include <mem.h>
+#include <string.h>
 
 #define CURSOR_IDX 0x3d4
 #define CURSOR_DATA 0x3d5
@@ -86,15 +87,138 @@ void putn(int n) {
     } while (index >= 1);
 }
 
-void vaputf(char **p, char const *fmt, va_list ap) {
-    // needs malloc
+struct buffer {
+    char *buffer;
+    int used, allocated;
+};
+
+void size_buffer(struct buffer *buf, int req) {
+    int allocated = buf->allocated;
+    while (allocated - buf->used < req) {
+        allocated *= 2;
+    }
+
+    if (allocated == buf->allocated) {
+        return;
+    }
+
+    char *newbuffer = malloc(allocated);
+    memcpy(newbuffer, buf->buffer, buf->used);
+    free(buf->buffer);
+    buf->buffer = newbuffer;
+    buf->allocated = allocated;
+}
+
+static void append_buffer_str(struct buffer *buf, char const *s) {
+    int len = strlen(s);
+    size_buffer(buf, len);
+    memcpy(buf->buffer + buf->used, s, len);
+    buf->used += len;
+};
+
+static void append_buffer_char(struct buffer *buf, char c) {
+    size_buffer(buf, 1);
+    buf->buffer[buf->used++] = c;
+}
+
+int vasputf(char **p, char const *fmt, va_list ap) {
+    struct buffer buf;
+    buf.buffer = malloc(8);
+    buf.used = 0;
+    buf.allocated = 8;
+
+    int is_escape = 0;
+    int lenmod;
+    char c, padder, sepr;
+
+    while ((c = *fmt++)) {
+        if (is_escape) {
+            if (c == '%') {
+                append_buffer_char(&buf, c);
+                is_escape = 0;
+                continue;
+            }
+
+            if ((c == ' ' || c == '0') && !lenmod && padder == 0) {
+                padder = c;
+                continue;
+            }
+
+            if (c == ',') {
+                sepr = c;
+                continue;
+            }
+
+            if (c >= '0' && c <= '9') {
+                lenmod = (lenmod * 10) + (c - '0');
+                continue;
+            }
+
+            switch (c) {
+            case 's':
+                append_buffer_str(&buf, va_arg(ap, char const *));
+                break;
+
+            case 'd':
+            case 'x':
+                {
+                    int n = va_arg(ap, int);
+                    int orig = n;
+                    int base = (c == 'd') ? 10 : 16;
+
+                    int index = 1, digits = 1, separator;
+
+                    switch (base) {
+                    case 10: separator = 3; break;
+                    case 2: case 8: case 16: separator = 4; break;
+                    }
+
+                    while (n / index >= base || digits < lenmod) {
+                        index *= base;
+                        ++digits;
+                    }
+
+                    do {
+                        int c = (n / index);
+                        n -= c * index;
+
+                        if (!c && index > orig && index != 1) {
+                            append_buffer_char(&buf, padder == 0 ? ' ' : padder);
+                        } else {
+                            append_buffer_char(&buf, (c >= 0 && c <= 9) ? (c + '0') : (c - 10 + 'a'));
+                        }
+
+                        index /= base;
+                        --digits;
+
+                        if (sepr && separator > 0 && digits && separator == 0 && index >= 1) {
+                            append_buffer_char(&buf, sepr);
+                        }
+                    } while (index >= 1);
+
+                    break;
+                }
+            }
+
+            is_escape = 0;
+        } else if (c == '%') {
+            is_escape = 1;
+            lenmod = padder = sepr = 0;
+        } else {
+            append_buffer_char(&buf, c);
+        }
+    }
+
+    *p = strndup(buf.buffer, buf.used);
+    free(buf.buffer);
+    return buf.used;
 }
 
 void putf(char const *fmt, ...) {
     va_list ap;
     va_start(ap, fmt);
     char *p;
-    vaputf(&p, fmt, ap);
+    vasputf(&p, fmt, ap);
     puts(p);
     free(p);
 }

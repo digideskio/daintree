@@ -10,7 +10,7 @@ void cursor(void);
 void putc(char c);
 void puts(char const *s);
 void putn(int n);
-void vaputf(char **p, char const *fmt, va_list ap);
+int vasputf(char **p, char const *fmt, va_list ap);
 void putf(char const *fmt, ...);
 void clear(void);
 char readch(void);
