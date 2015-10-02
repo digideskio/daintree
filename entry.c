@@ -17,6 +17,11 @@ void entry(multiboot_info_t *multiboot) {
 
     clear();
     puts("daintree\n");
+    
+    while (1) {
+        puts("> ");
+        char *i = gets();
+    }
 
     Program program;
     memset(&program, 0, sizeof(program));

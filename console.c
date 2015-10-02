@@ -11,8 +11,38 @@
 #define CURSOR_LSB_IDX 0xf
 
 static uint8_t *vmem = (uint8_t *)0xb8000;
-
 static uint8_t vx = 0, vy = 0;
+
+static char keyboard_us[] = {
+    0, 27, '1', '2', '3', '4', '5', '6', '7', '8',              /* 0~9 */
+    '9', '0', '-', '=', '\b',                                   /* ~14 */
+    '\t', 'q', 'w', 'e', 'r',                                   /* ~19 */
+    't', 'y', 'u', 'i', 'o', 'p',                               /* ~25 */
+    '[', ']', '\n', 0,                                          /* ~29 (CTRL) */
+    'a', 's', 'd', 'f', 'g', 'h',                               /* ~35 */
+    'j', 'k', 'l', ';', '\'',                                   /* ~40 */
+    '`', 0, '\\', 'z', 'x', 'c',                                /* ~46 (LSHFT) */
+    'v', 'b', 'n', 'm', ',',                                    /* ~51 */
+    '.', '/', 0, '*',                                           /* ~55 (RSHFT) */
+    0, ' ', 0, 0, 0, 0, 0, 0, 0,                                /* ~64 (ALT, CAPSL, F1~6) */
+    0, 0, 0, 0,                                                 /* ~68 (F7~10) */
+    0, 0, 0, 0, 0, '-',                                         /* ~74 (NUML, SCROLLL, HOME, UP, PGUP) */
+    0, 0, 0, '+',                                               /* ~78 (LEFT, ?, RIGHT) */
+    0, 0, 0, 0, 0,                                              /* ~83 (END, DOWN, PGDN, INS, DEL) */
+    0, 0, 0, 0, 0,                                              /* ~88 (?, ?, ?, F11~12) */
+    0                                                           /* undefined */
+};
+
+/* Table of characters and their shifted equivalents. */
+static char keyboard_us_shift_table[] = {
+    '`', '~',   '1', '!',   '2', '@',   '3', '#',
+    '4', '$',   '5', '%',   '6', '^',   '7', '&',
+    '8', '*',   '9', '(',   '0', ')',   '-', '_',
+    '=', '+',   '[', '{',   ']', '}',   '\\', '|',
+    ';', ':',   '\'', '"',  ',', '<',   '.', '>',
+    '/', '?',
+    0
+};
 
 void scroll() {
     while (vx >= 80) {
@@ -47,6 +77,16 @@ void putc(char c) {
         ++vy;
     } else if (c == '\t') {
         vx += 8 - (vx % 8);
+    } else if (c == '\b') {
+        if (!vx) {
+            if (vy) {
+                --vy;
+                vx = 79;
+            }
+        } else {
+            --vx;
+        }
+        vmem[(vy * 80 + vx) * 2] = ' ';
     } else {
         vmem[(vy * 80 + vx) * 2] = c;
         vmem[(vy * 80 + vx) * 2 + 1] = 0x07;
@@ -87,12 +127,15 @@ void putn(int n) {
     } while (index >= 1);
 }
 
-struct buffer {
-    char *buffer;
-    int used, allocated;
-};
+struct buffer *alloc_buffer(void) {
+    struct buffer *buf = malloc(sizeof(*buf));
+    buf->buffer = malloc(8);
+    buf->used = 0;
+    buf->allocated = 8;
+    return buf;
+}
 
-void size_buffer(struct buffer *buf, int req) {
+static void size_buffer(struct buffer *buf, int req) {
     int allocated = buf->allocated;
     while (allocated - buf->used < req) {
         allocated *= 2;
@@ -109,23 +152,25 @@ void size_buffer(struct buffer *buf, int req) {
     buf->allocated = allocated;
 }
 
-static void append_buffer_str(struct buffer *buf, char const *s) {
+void append_buffer_str(struct buffer *buf, char const *s) {
     int len = strlen(s);
     size_buffer(buf, len);
     memcpy(buf->buffer + buf->used, s, len);
     buf->used += len;
 };
 
-static void append_buffer_char(struct buffer *buf, char c) {
+void append_buffer_char(struct buffer *buf, char c) {
     size_buffer(buf, 1);
     buf->buffer[buf->used++] = c;
 }
 
+void free_buffer(struct buffer *buf) {
+    free(buf->buffer);
+    free(buf);
+}
+
 int vasputf(char **p, char const *fmt, va_list ap) {
-    struct buffer buf;
-    buf.buffer = malloc(8);
-    buf.used = 0;
-    buf.allocated = 8;
+    struct buffer *buf = alloc_buffer();
 
     int is_escape = 0;
     int lenmod;
@@ -134,7 +179,7 @@ int vasputf(char **p, char const *fmt, va_list ap) {
     while ((c = *fmt++)) {
         if (is_escape) {
             if (c == '%') {
-                append_buffer_char(&buf, c);
+                append_buffer_char(buf, c);
                 is_escape = 0;
                 continue;
             }
@@ -156,7 +201,7 @@ int vasputf(char **p, char const *fmt, va_list ap) {
 
             switch (c) {
             case 's':
-                append_buffer_str(&buf, va_arg(ap, char const *));
+                append_buffer_str(buf, va_arg(ap, char const *));
                 break;
 
             case 'd':
@@ -183,16 +228,16 @@ int vasputf(char **p, char const *fmt, va_list ap) {
                         n -= c * index;
 
                         if (!c && index > orig && index != 1) {
-                            append_buffer_char(&buf, padder == 0 ? ' ' : padder);
+                            append_buffer_char(buf, padder == 0 ? ' ' : padder);
                         } else {
-                            append_buffer_char(&buf, (c >= 0 && c <= 9) ? (c + '0') : (c - 10 + 'a'));
+                            append_buffer_char(buf, (c >= 0 && c <= 9) ? (c + '0') : (c - 10 + 'a'));
                         }
 
                         index /= base;
                         --digits;
 
                         if (sepr && separator > 0 && digits && separator == 0 && index >= 1) {
-                            append_buffer_char(&buf, sepr);
+                            append_buffer_char(buf, sepr);
                         }
                     } while (index >= 1);
 
@@ -205,13 +250,14 @@ int vasputf(char **p, char const *fmt, va_list ap) {
             is_escape = 1;
             lenmod = padder = sepr = 0;
         } else {
-            append_buffer_char(&buf, c);
+            append_buffer_char(buf, c);
         }
     }
 
-    *p = strndup(buf.buffer, buf.used);
-    free(buf.buffer);
-    return buf.used;
+    int used = buf->used;
+    *p = strndup(buf->buffer, used);
+    free_buffer(buf);
+    return used;
 }
 
 void putf(char const *fmt, ...) {
@@ -232,15 +278,132 @@ void clear(void) {
     cursor();
 }
 
-char readch(void) {
+uint8_t readch(void) {
     while (1) {
-        uint8_t status = in8(0x64);
-        if ((status & 0x01) == 0x01) {
+        if (in8(0x64) & 0x01) {
             break;
         }
     }
 
     return in8(0x60);
+}
+
+static void wait_kb(void) {
+    while (1) {
+        if ((in8(0x64) & 0x02) == 0) {
+            break;
+        }
+    }
+}
+
+static int capslock = 0;
+
+static char shift_ch(char ch) {
+    if (ch >= 'a' && ch <= 'z') {
+        return ch - 0x20;
+    }
+
+    char *p = keyboard_us_shift_table;
+    while (*p) {
+        if (p[0] == ch) {
+            return p[1];
+        }
+        p += 2;
+    }
+    return ch;
+}
+
+static char capslock_ch(char ch) {
+    if (ch >= 'a' && ch <= 'z') {
+        return ch - 0x20;
+    }
+
+    if (ch >= 'A' && ch <= 'Z') {
+        return ch + 0x20;
+    }
+
+    return ch;
+}
+
+char *gets(void) {
+    struct buffer *buf = alloc_buffer();
+    int ctrl = 0, shift = 0, alt = 0;
+
+    while (1) {
+        int update_leds = 0;
+        uint8_t ch = readch();
+
+        if (ch & 0x80) {
+            ch &= ~0x80;
+
+            switch (ch) {
+            case 29:
+                ctrl = 0;
+                break;
+            case 42:
+            case 54:
+                shift = 0;
+                break;
+            case 56:
+                alt = 0;
+                break;
+            }
+        } else {
+            switch (ch) {
+            case 29:
+                ctrl = 1;
+                break;
+            case 42:
+            case 54:
+                shift = 1;
+                break;
+            case 56:
+                alt = 1;
+                break;
+            case 58:
+                capslock = !capslock;
+                update_leds = 1;
+                break;
+            default:
+                ch = keyboard_us[ch];
+
+                if (shift) {
+                    ch = shift_ch(ch);
+                }
+
+                if (capslock) {
+                    ch = capslock_ch(ch);
+                }
+
+                if (ch == '\b') {
+                    if (buf->used) {
+                        putc(ch);
+                        --buf->used;
+                    }
+                } else if (ch == '\n') {
+                    putc(ch);
+                    goto done;
+                } else {
+                    putc(ch);
+                    append_buffer_char(buf, ch);
+                }
+                break;
+            }
+        }
+
+        if (update_leds) {
+            uint8_t value = capslock ? 0x04 : 0;
+            wait_kb();
+            out8(0x60, 0xed);
+            wait_kb();
+            out8(0x60, value);
+        }
+    }
+
+done: { }
+    char *result = strndup(buf->buffer, buf->used);
+    free_buffer(buf);
+    return result;
 }
 
 // vim: set sw=4 et:
