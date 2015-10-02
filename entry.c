@@ -13,10 +13,12 @@ void entry(multiboot_info_t *multiboot) {
         return;
     }
 
+
     placement_malloc = (uint32_t) &_kend;
 
     clear();
     puts("daintree\n");
+    putn(multiboot->mem_upper);
 
     Context *context = context_new();
     
