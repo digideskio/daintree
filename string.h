@@ -5,6 +5,7 @@
 
 #include <arch.h>
 
+char *strdup(char const *s1);
 char *strndup(char const *s1, uint32_t n);
 int strncmp(char const *s1, char const *s2, uint32_t n);
 int strlen(char const *s);

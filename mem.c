@@ -2,8 +2,12 @@
 
 #include <mem.h>
 
+uint32_t placement_malloc;
+
 void *malloc(uint32_t n) {
-    return (void *)0;
+    void *r = (void *)placement_malloc;
+    placement_malloc += n;
+    return r;
 }
 
 void free(void *p) {

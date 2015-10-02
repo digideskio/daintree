@@ -3,6 +3,12 @@
 #include <string.h>
 #include <mem.h>
 
+char *strdup(char const *s1) {
+    int len = strlen(s1);
+    char *dst = malloc(len + 1);
+    memcpy(dst, s1, len + 1);
+    return dst;
+}
 char *strndup(char const *s1, uint32_t n) {
     char *dst = malloc(n + 1);
     char *w = dst;

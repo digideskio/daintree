@@ -4,12 +4,11 @@
 #define __PROGRAM_H__
 
 typedef struct {
-
+    char *id;
 } Program;
 
 union token {
-    int stmt;
-    int identifier;
+    char *identifier;
 };
 
 int yylex(void);

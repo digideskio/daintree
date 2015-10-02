@@ -6,6 +6,7 @@ SECTIONS
 {
 	.text phys : AT (phys)
 	{
+		__kstart = .;
 		code = .;
 		*(.multiboot)
 		*(.text)
@@ -26,4 +27,6 @@ SECTIONS
 		*(COMMON)
 		. = ALIGN(4096);
 	}
+
+	__kend = .;
 }

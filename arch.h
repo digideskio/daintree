@@ -17,6 +17,8 @@ typedef uint32_t *va_list;
 uint8_t in8(uint16_t port);
 void out8(uint16_t port, uint8_t data);
 
+extern void *_kstart, *_kend;
+
 #endif
 
 // vim: set sw=4 et:

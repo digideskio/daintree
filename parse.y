@@ -10,7 +10,7 @@
 %token END_OF_FILE 0 "$end"
 %token NL
 
-%type <stmt> stmt
+%type <identifier> stmt line
 
 %nonassoc <identifier> IDENTIFIER
 
@@ -18,7 +18,7 @@
 
 input:
     /* empty */
-  | input line
+  | input line { if ($2) { program->id = $2; } }
 ;
 
 line_separator:
@@ -27,13 +27,13 @@ line_separator:
 ;
 
 line:
-    line_separator
-  | stmt line_separator
-  | stmt END_OF_FILE
+    line_separator      { $$ = 0; }
+  | stmt line_separator { $$ = $1; }
+  | stmt END_OF_FILE    { $$ = $1; }
 ;
 
 stmt:
-    IDENTIFIER { $$ = $1; }
+    IDENTIFIER { puts("IDENTIFIER\n"); $$ = $1; }
 ;
 
 /* vim: set sw=4 et: */
