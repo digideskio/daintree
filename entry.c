@@ -26,8 +26,9 @@ void entry(multiboot_info_t *multiboot) {
         memset(&program, 0, sizeof(program));
         active_lexer = lexer_start_str(i);
         int r = yyparse(&program);
-        putf("yyparse: %d\n", r);
-        putf("stmt: %x\n", program.stmt);
+        if (yyparse(&program) == 0 && program.stmt) {
+            putf("set %s to %d\n", program.stmt->identifier, program.stmt->number);
+        }
         free(i);
     }
 
