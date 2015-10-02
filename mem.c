@@ -68,7 +68,16 @@ void *malloc(uint32_t n) {
 }
 
 void free(void *p) {
+    if (!p) {
+        return;
+    }
+
     struct heap_entry *entry = (p - sizeof(struct heap_entry));
+    if (entry->free) {
+        puts("double free!\n");
+        return;
+    }
+
     entry->free = 1;
 
     heap_in_use -= entry->size;
