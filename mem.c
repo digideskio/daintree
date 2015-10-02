@@ -10,6 +10,8 @@ struct heap_entry {
     uint32_t free;
 } *heap;
 
+uint32_t heap_size, heap_in_use;
+
 void heap_init(uint32_t lower, uint32_t upper) {
     // Align the bottom of the heap.
     if (lower % 4 != 0) {
@@ -18,13 +20,10 @@ void heap_init(uint32_t lower, uint32_t upper) {
 
     heap = (struct heap_entry *)lower;
     heap->prev = heap->next = NULL;
-    heap->size = upper - lower - sizeof(*heap);
-    puts("heap init at ");
-    putn(lower);
-    puts(" (size ");
-    putn(heap->size);
-    puts(")\n");
+    heap_size = heap->size = upper - lower - sizeof(*heap);
     heap->free = 1;
+
+    heap_in_use = 0;
 }
 
 void *malloc(uint32_t n) {
@@ -50,6 +49,7 @@ void *malloc(uint32_t n) {
     search->free = 0;
     if (search->size - n <= sizeof(struct heap_entry) + 4) {
         // No room for even one extra allocation, so screw that.
+        heap_in_use += search->size;
         return (void *)search + sizeof(struct heap_entry);
     }
 
@@ -63,13 +63,15 @@ void *malloc(uint32_t n) {
     leftover->free = 1;
 
     search->size = n;
+    heap_in_use += sizeof(struct heap_entry) + n;
     return (void *)search + sizeof(struct heap_entry);
 }
 
 void free(void *p) {
-    // no-op (until alloc)
     struct heap_entry *entry = (p - sizeof(struct heap_entry));
     entry->free = 1;
+
+    heap_in_use -= entry->size;
 
     while (entry->prev && entry->prev->free) {
         entry->prev->size += sizeof(struct heap_entry) + entry->size;
@@ -78,6 +80,7 @@ void free(void *p) {
         if (entry->next) {
             entry->next->prev = entry;
         }
+        heap_in_use -= sizeof(struct heap_entry);
     }
 
     while (entry->next && entry->next->free) {
@@ -86,6 +89,7 @@ void free(void *p) {
             entry->next->next->prev = entry;
         }
         entry->next = entry->next->next;
+        heap_in_use -= sizeof(struct heap_entry);
     }
 }
 

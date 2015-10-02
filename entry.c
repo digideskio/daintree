@@ -7,6 +7,11 @@
 #include <program.h>
 #include <build/parse.tab.h>
 
+struct lexer;
+extern struct lexer *active_lexer;
+struct lexer *lexer_start_str(char const *str);
+void lexer_free(struct lexer *lexer);
+
 void entry(multiboot_info_t *multiboot) {
     if (multiboot == 0) {
         puts("no multiboot info. halting.");
@@ -39,7 +44,13 @@ void entry(multiboot_info_t *multiboot) {
             putf("parse error\n");
         }
 
+        lexer_free(active_lexer);
+
+        stmt_list_free(program.stmt_list);
+
         free(i);
+
+        putf("heap use: %x/%x\n", heap_in_use, heap_size);
     }
 
     context_free(context);

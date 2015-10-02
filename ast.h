@@ -3,10 +3,6 @@
 #ifndef __AST_H__
 #define __AST_H__
 
-struct lexer;
-extern struct lexer *active_lexer;
-struct lexer *lexer_start_str(char const *str);
-
 struct expr {
     enum expr_type {
         EXPR_NUMBER,

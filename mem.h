@@ -5,6 +5,8 @@
 
 #include <arch.h>
 
+extern uint32_t heap_size, heap_in_use;
+
 void heap_init(uint32_t lower, uint32_t upper);
 void *malloc(uint32_t n);
 void free(void *p);
