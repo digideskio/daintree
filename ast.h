@@ -32,6 +32,7 @@ struct expr *expr_copy(struct expr const *expr);
 struct expr *expr_number(int number);
 struct expr *expr_identifier(char const *identifier);
 struct expr *expr_string(char const *identifier);
+struct expr *expr_binary(enum expr_binary_type type, struct expr const *lhs, struct expr const *rhs);
 
 struct stmt {
     enum stmt_type {
@@ -73,6 +74,7 @@ union token {
     char *identifier;
     char *string;
     int number;
+    struct buffer *buf;
 };
 
 #endif

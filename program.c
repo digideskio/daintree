@@ -3,9 +3,35 @@
 #include <program.h>
 #include <console.h>
 #include <mem.h>
+#include <string.h>
 
 #define VAL_IS_NUMBER(v) ((v).raw & 1)
 #define VAL_EXTRACT_NUMBER(v) ((v).raw >> 1)
+
+/*
+ * NOTE:
+ *
+ * irb(main):021:0> (2 ** 30).class
+ * => Bignum
+ * irb(main):022:0> (2 ** 30 - 1).class
+ * => Fixnum
+ * irb(main):024:0> (-(2 ** 30)).class
+ * => Fixnum
+ * irb(main):025:0> (-(2 ** 30)-1).class
+ * => Bignum
+ */
+
+static object *object_alloc(enum object_type type) {
+    object *obj = malloc(sizeof(*obj));
+    obj->type = type;
+    return obj;
+}
+
+object *object_string(char const *str) {
+    object *obj = object_alloc(OBJECT_STRING);
+    obj->string = strdup(str);
+    return obj;
+}
 
 static val context_get(Context *context, char const *key) {
     return (val) (uint32_t) dict_search(context->env, key);
@@ -33,6 +59,8 @@ static val eval(struct expr const *expr, Context *context) {
                 VAL_EXTRACT_NUMBER(lhs) +
                 VAL_EXTRACT_NUMBER(rhs));
         }
+    case EXPR_STRING:
+        return (val) object_string(expr->string);
     }
     /* ?? */
     return (val) (uint32_t) 0;
@@ -51,7 +79,11 @@ static void execute(struct stmt const *stmt, Context *context) {
             if (VAL_IS_NUMBER(v)) {
                 putf("%d\n", VAL_EXTRACT_NUMBER(v));
             } else {
-                putf("??\n");
+                switch (v.object->type) {
+                case OBJECT_STRING:
+                    putf("%s\n", v.object->string);
+                    break;
+                }
             }
             break;
         }

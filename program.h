@@ -7,9 +7,19 @@
 #include <ast.h>
 #include <dict.h>
 
+/* temp. This will be GC'd and based on the actual class system. */
+typedef struct {
+    enum object_type {
+        OBJECT_STRING
+    } type;
+    union {
+        char *string;
+    };
+} object;
+
 typedef union {
    uint32_t raw;
-   void *object;
+   object *object;
 } val;
 
 typedef struct {

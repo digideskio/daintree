@@ -27,9 +27,16 @@ void entry(multiboot_info_t *multiboot) {
         Program program;
         memset(&program, 0, sizeof(program));
         active_lexer = lexer_start_str(i);
+        if (!active_lexer) {
+            putf("lexer didn't init\n");
+            break;
+        }
+
         int r = yyparse(&program);
         if (!r) {
             program_run(&program, context);
+        } else {
+            putf("parse error\n");
         }
 
         free(i);

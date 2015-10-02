@@ -43,9 +43,24 @@ print
 
 [ \t]+
 
-"[^"]*"
-    int len = strlen(match);
-    context->string = strndup(match + 1, len - 2);
+"
+    BEGIN(string);
+    context->buf = alloc_buffer();
+
+*mode string
+
+[^"\\]+
+    append_buffer_str(context->buf, match);
+
+\\.
+    append_buffer_char(context->buf, match[1]);
+
+"
+    END();
+
+    char *string = strndup(context->buf->buffer, context->buf->used);
+    free_buffer(context->buf);
+    context->string = string;
     return STRING;
 
 *# vim: set sw=4 et:
