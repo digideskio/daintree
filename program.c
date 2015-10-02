@@ -33,10 +33,9 @@ static val eval(struct expr const *expr, Context *context) {
                 VAL_EXTRACT_NUMBER(lhs) +
                 VAL_EXTRACT_NUMBER(rhs));
         }
-    default:
-        /* ?? */
-        return (val) (uint32_t) 0;
     }
+    /* ?? */
+    return (val) (uint32_t) 0;
 }
 
 static void execute(struct stmt const *stmt, Context *context) {

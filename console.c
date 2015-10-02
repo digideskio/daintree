@@ -33,6 +33,26 @@ static char keyboard_us[] = {
     0                                                           /* undefined */
 };
 
+static char keyboard_dv[] = {
+    0, 27, '1', '2', '3', '4', '5', '6', '7', '8',              /* 0~9 */
+    '9', '0', '[', ']', '\b',                                   /* ~14 */
+    '\t', '\'', ',', '.', 'p',                                  /* ~19 */
+    'y', 'f', 'g', 'c', 'r', 'l',                               /* ~25 */
+    '/', '=', '\n', 0,                                          /* ~29 (CTRL) */
+    'a', 'o', 'e', 'u', 'i', 'd',                               /* ~35 */
+    'h', 't', 'n', 's', '-',                                    /* ~40 */
+    '`', 0, '\\', ';', 'q', 'j',                                /* ~46 (LSHFT) */
+    'k', 'x', 'b', 'm', 'w',                                    /* ~51 */
+    'v', 'z', 0, '*',                                           /* ~55 (RSHFT) */
+    0, ' ', 0, 0, 0, 0, 0, 0, 0,                                /* ~64 (ALT, CAPSL, F1~6) */
+    0, 0, 0, 0,                                                 /* ~68 (F7~10) */
+    0, 0, 0, 0, 0, '-',                                         /* ~74 (NUML, SCROLLL, HOME, UP, PGUP) */
+    0, 0, 0, '+',                                               /* ~78 (LEFT, ?, RIGHT) */
+    0, 0, 0, 0, 0,                                              /* ~83 (END, DOWN, PGDN, INS, DEL) */
+    0, 0, 0, 0, 0,                                              /* ~88 (?, ?, ?, F11~12) */
+    0                                                           /* undefined */
+};
+
 /* Table of characters and their shifted equivalents. */
 static char keyboard_us_shift_table[] = {
     '`', '~',   '1', '!',   '2', '@',   '3', '#',
@@ -365,7 +385,7 @@ char *gets(void) {
                 update_leds = 1;
                 break;
             default:
-                ch = keyboard_us[ch];
+                ch = keyboard_dv[ch];
 
                 if (shift) {
                     ch = shift_ch(ch);
