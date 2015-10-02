@@ -15,7 +15,8 @@ COPYDEST := C:/daintree
 CSRCS := entry.c console.c mem.c arch.c string.c ctype.c stdlib.c program.c ast.c crc32.c dict.c
 ASRCS := entry.s
 LDFILE := daintree.ld
-OBJS := $(CSRCS:%.c=$(BUILDDIR)/%.c.o) $(ASRCS:%.s=$(BUILDDIR)/%.s.o)
+OBJS := $(CSRCS:%.c=$(BUILDDIR)/%.c.o) $(ASRCS:%.s=$(BUILDDIR)/%.s.o) $(BUILDDIR)/lex.sv.o $(BUILDDIR)/parse.tab.o
+DEPS := $(CSRCS:%.c=$(BUILDDIR)/%.c.d) $(BUILDDIR)/lex.sv.d $(BUILDDIR)/parse.tab.d
 MENU := menu.lst
 MENUDEST := C:/boot/grub/menu.lst
 IMGFILE := daintree.img
@@ -34,20 +35,22 @@ $(TARGET)-copy: $(TARGET)
 	MTOOLSRC=mtoolsrc mcopy -D o $(TARGET) $(COPYDEST)
 	MTOOLSRC=mtoolsrc mcopy -D o $(MENU) $(MENUDEST)
 
-$(TARGET): $(OBJS) $(LDFILE) $(BUILDDIR)/parse.tab.o $(BUILDDIR)/lex.sv.o
-	$(LD) $(LDFLAGS) -T$(LDFILE) $(OBJS) $(BUILDDIR)/parse.tab.o $(BUILDDIR)/lex.sv.o -o $(TARGET)
+$(TARGET): $(OBJS) $(LDFILE)
+	$(LD) $(LDFLAGS) -T$(LDFILE) $(OBJS) -o $(TARGET)
+
+-include $(DEPS)
 
 $(BUILDDIR)/%.c.o: %.c $(BUILDDIR)/parse.tab.o
-	$(CC) $(CFLAGS) -I. -c $< -o $@
+	$(CC) $(CFLAGS) -I. -c $< -o $@ -MMD
 
 $(BUILDDIR)/%.s.o: %.s
 	$(AS) $(ASFLAGS) $< -o $@
 
 $(BUILDDIR)/parse.tab.o: $(BUILDDIR)/parse.tab.c
-	$(CC) $(CFLAGS) -I. -c $< -o $@
+	$(CC) $(CFLAGS) -I. -c $< -o $@ -MMD
 
 $(BUILDDIR)/lex.sv.o: $(BUILDDIR)/lex.sv.c $(BUILDDIR)/parse.tab.c
-	$(CC) $(CFLAGS) -I. -Ibuild -DSONAVARA_NO_SELF_CHAIN -c $(BUILDDIR)/lex.sv.c -o $@
+	$(CC) $(CFLAGS) -I. -Ibuild -DSONAVARA_NO_SELF_CHAIN -c $(BUILDDIR)/lex.sv.c -o $@ -MMD
 
 $(BUILDDIR)/parse.tab.c: parse.y
 	$(BISON) -v --report=state -d $<
