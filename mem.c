@@ -5,6 +5,10 @@
 uint32_t placement_malloc;
 
 void *malloc(uint32_t n) {
+    if (placement_malloc % 4 != 0) {
+        placement_malloc += 4 - (placement_malloc % 4);
+    }
+
     void *r = (void *)placement_malloc;
     placement_malloc += n;
     return r;
