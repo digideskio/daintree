@@ -19,11 +19,13 @@ void entry(multiboot_info_t *multiboot) {
     puts("daintree\n");
 
     Program program;
-    program.id = 0;
+    memset(&program, 0, sizeof(program));
+
+    active_lexer = lexer_start_str("abc = 123\n");
 
     int r = yyparse(&program);
     putf("yyparse: %d\n", r);
-    putf("id: %x %s\n", program.id, program.id);
+    putf("stmt: %x\n", program.stmt);
 
     asm volatile("hlt");
 }

@@ -7,12 +7,12 @@
     struct lexer *lexer_start_str(char const *src);
     int lexer_lex(struct lexer *lexer, union token *context);
 
-    static struct lexer *active_lexer = NULL;
+    struct lexer *active_lexer;
     union token yylval;
 
     int yylex(void) {
         if (!active_lexer) {
-            active_lexer = lexer_start_str("hello");
+            return 0;
         }
 
         return lexer_lex(active_lexer, &yylval);
@@ -27,5 +27,14 @@
 [a-z]+
     context->identifier = strdup(match);
     return IDENTIFIER;
+
+=
+    return EQUALS;
+
+[0-9]+
+    context->number = atoi(match);
+    return NUMBER;
+
+[ \t]+
 
 *# vim: set sw=4 et:

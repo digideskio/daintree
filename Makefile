@@ -12,7 +12,7 @@ LDFLAGS := -melf_i386
 BUILDDIR := build
 TARGET := $(BUILDDIR)/daintree
 COPYDEST := C:/daintree
-CSRCS := entry.c console.c mem.c arch.c string.c ctype.c
+CSRCS := entry.c console.c mem.c arch.c string.c ctype.c stdlib.c program.c
 ASRCS := entry.s
 LDFILE := daintree.ld
 OBJS := $(CSRCS:%.c=$(BUILDDIR)/%.c.o) $(ASRCS:%.s=$(BUILDDIR)/%.s.o)

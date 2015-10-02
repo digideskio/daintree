@@ -10,15 +10,18 @@
 %token END_OF_FILE 0 "$end"
 %token NL
 
-%type <identifier> stmt line
+%type <stmt> stmt line
+
+%right EQUALS
 
 %nonassoc <identifier> IDENTIFIER
+%nonassoc <number> NUMBER
 
 %%
 
 input:
     /* empty */
-  | input line { if ($2) { program->id = $2; } }
+  | input line { if ($2) { program->stmt = $2; } }
 ;
 
 line_separator:
@@ -33,7 +36,7 @@ line:
 ;
 
 stmt:
-    IDENTIFIER { puts("IDENTIFIER\n"); $$ = $1; }
+    IDENTIFIER EQUALS NUMBER { $$ = stmt_new($1, $3); free($1); }
 ;
 
 /* vim: set sw=4 et: */
