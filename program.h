@@ -1,5 +1,7 @@
-#ifndef PROGRAM_H
-#define PROGRAM_H
+// daintree
+
+#ifndef __PROGRAM_H__
+#define __PROGRAM_H__
 
 typedef struct {
 

@@ -1,5 +1,5 @@
 %{
-    #include "program.h"
+    #include <program.h>
 %}
 
 %define api.value.type {union token}

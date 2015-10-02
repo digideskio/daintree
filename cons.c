@@ -1,8 +1,8 @@
 // daintree
 
-#include "arch.h"
-#include "cons.h"
-#include "mem.h"
+#include <arch.h>
+#include <cons.h>
+#include <mem.h>
 
 #define CURSOR_IDX 0x3d4
 #define CURSOR_DATA 0x3d5

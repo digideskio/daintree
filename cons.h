@@ -3,7 +3,7 @@
 #ifndef __CONS_H__
 #define __CONS_H__
 
-#include "arch.h"
+#include <arch.h>
 
 void scroll(void);
 void cursor(void);

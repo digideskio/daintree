@@ -1,5 +1,7 @@
-#ifndef LIMIT_H
-#define LIMIT_H
+// daintree
+
+#ifndef __LIMIT_H__
+#define __LIMIT_H__
 
 #define CHAR_BIT 8
 

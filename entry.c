@@ -1,8 +1,8 @@
 // daintree
 
-#include "arch.h"
-#include "cons.h"
-#include "multiboot.h"
+#include <arch.h>
+#include <cons.h>
+#include <multiboot.h>
 
 void entry(multiboot_info_t *multiboot) {
   if (multiboot == 0) {

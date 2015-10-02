@@ -1,9 +1,13 @@
-#ifndef STRING_H
-#define STRING_H
+// daintree
 
-typedef unsigned long size_t;
+#ifndef __STRING_H__
+#define __STRING_H__
 
-char *strndup(char const *s1, size_t n);
+#include <arch.h>
+
+char *strndup(char const *s1, uint32_t n);
+int strncmp(char const *s1, char const *s2, uint32_t n);
+int strlen(char const *s);
 
 #endif
 

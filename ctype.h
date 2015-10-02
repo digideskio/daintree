@@ -1,5 +1,10 @@
-#ifndef CTYPE_H
-#define CTYPE_H
+// daintree
+
+#ifndef __CTYPE_H__
+#define __CTYPE_H__
+
+int toupper(int c);
+int tolower(int c);
 
 int islower(int c);
 int isupper(int c);

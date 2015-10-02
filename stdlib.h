@@ -1,8 +1,9 @@
-#ifndef STDLIB_H
-#define STDLIB_H
+// daintree
 
-void *malloc(int size);
-void free(void *ptr);
+#ifndef __STDLIB_H__
+#define __STDLIB_H__
+
+#include <mem.h>
 
 #endif
 

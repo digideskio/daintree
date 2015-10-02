@@ -4,15 +4,15 @@ LD = i686-elf-ld
 AS = i686-elf-as
 CFLAGS := -O0 -ansi -std=gnu99 -g -m32 -nodefaultlibs -nostdinc -nostdlib \
 	-static -ffreestanding -fleading-underscore -fno-builtin \
-	-fno-stack-protector -fomit-frame-pointer -Wall -Wcast-qual -Wextra \
-	-Wwrite-strings
+	-fno-stack-protector -fomit-frame-pointer -Wall -Wcast-qual \
+	-Wwrite-strings -Wno-unused-parameter
 ASFLAGS := -gstabs --32
 LDFLAGS := -melf_i386
 
 BUILDDIR := build
 TARGET := $(BUILDDIR)/daintree
 COPYDEST := C:/daintree
-CSRCS := entry.c cons.c mem.c arch.c
+CSRCS := entry.c cons.c mem.c arch.c string.c ctype.c
 ASRCS := entry.s
 LDFILE := daintree.ld
 OBJS := $(CSRCS:%.c=$(BUILDDIR)/%.c.o) $(ASRCS:%.s=$(BUILDDIR)/%.s.o)
@@ -38,7 +38,7 @@ $(TARGET): $(OBJS) $(LDFILE) $(BUILDDIR)/parse.tab.o $(BUILDDIR)/lex.sv.o
 	$(LD) $(LDFLAGS) -T$(LDFILE) $(OBJS) $(BUILDDIR)/parse.tab.o $(BUILDDIR)/lex.sv.o -o $(TARGET)
 
 $(BUILDDIR)/%.c.o: %.c
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) -I. -c $< -o $@
 
 $(BUILDDIR)/%.s.o: %.s
 	$(AS) $(ASFLAGS) $< -o $@
