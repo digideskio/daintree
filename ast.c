@@ -14,6 +14,10 @@ void expr_free(struct expr *expr) {
         free(expr->string);
         break;
 
+    case EXPR_UNARY:
+        expr_free(expr->unary.arg);
+        break;
+
     case EXPR_BINARY:
         expr_free(expr->binary.lhs);
         expr_free(expr->binary.rhs);
@@ -39,6 +43,10 @@ struct expr *expr_copy(struct expr const *expr) {
         break;
     case EXPR_STRING:
         copy->string = strdup(expr->string);
+        break;
+    case EXPR_UNARY:
+        copy->unary.type = expr->unary.type;
+        copy->unary.arg = expr_copy(expr->unary.arg);
         break;
     case EXPR_BINARY:
         copy->binary.type = expr->binary.type;
@@ -71,6 +79,13 @@ struct expr *expr_identifier(char const *identifier) {
 struct expr *expr_string(char const *string) {
     struct expr *expr = expr_alloc(EXPR_STRING);
     expr->string = strdup(string);
+    return expr;
+}
+
+struct expr *expr_unary(enum expr_unary_type type, struct expr const *arg) {
+    struct expr *expr = expr_alloc(EXPR_UNARY);
+    expr->unary.type = type;
+    expr->unary.arg = expr_copy(arg);
     return expr;
 }
 

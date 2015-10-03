@@ -49,8 +49,6 @@ void entry(multiboot_info_t *multiboot) {
         stmt_list_free(program.stmt_list);
 
         free(i);
-
-        putf("heap use: %x/%x\n", heap_in_use, heap_size);
     }
 
     context_free(context);

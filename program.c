@@ -4,6 +4,7 @@
 #include <console.h>
 #include <mem.h>
 #include <string.h>
+#include <math.h>
 
 #define VAL_IS_NUMBER(v) ((v).raw & 1)
 #define VAL_EXTRACT_NUMBER(v) ((v).raw >> 1)
@@ -51,13 +52,47 @@ static val eval(struct expr const *expr, Context *context) {
         return context_get(context, expr->identifier);
     case EXPR_NUMBER:
         return val_number(expr->number);
+    case EXPR_UNARY:
+        {
+            val arg = eval(expr->unary.arg, context);
+
+            if (!VAL_IS_NUMBER(arg)) {
+                return val_number(0);
+            }
+
+            int an = VAL_EXTRACT_NUMBER(arg);
+
+            switch (expr->unary.type) {
+            case EXPR_UNARY_NEG:
+                return val_number(-an);
+            }
+        }
     case EXPR_BINARY:
         {
             val lhs = eval(expr->binary.lhs, context);
             val rhs = eval(expr->binary.rhs, context);
-            return val_number(
-                VAL_EXTRACT_NUMBER(lhs) +
-                VAL_EXTRACT_NUMBER(rhs));
+
+            if (!VAL_IS_NUMBER(lhs) || !VAL_IS_NUMBER(rhs)) {
+                return val_number(0);
+            }
+
+            int ln = VAL_EXTRACT_NUMBER(lhs),
+                rn = VAL_EXTRACT_NUMBER(rhs);
+
+            switch (expr->binary.type) {
+            case EXPR_BINARY_PLUS:
+                return val_number(ln + rn);
+            case EXPR_BINARY_TIMES:
+                return val_number(ln * rn);
+            case EXPR_BINARY_MINUS:
+                return val_number(ln - rn);
+            case EXPR_BINARY_DIVIDE:
+                return val_number(ln / rn);
+            case EXPR_BINARY_MODULO:
+                return val_number(ln % rn);
+            case EXPR_BINARY_EXP:
+                return val_number(powi(ln, rn));
+            }
         }
     case EXPR_STRING:
         return (val) object_string(expr->string);

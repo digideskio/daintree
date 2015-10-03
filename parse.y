@@ -22,8 +22,9 @@
 %left BINARY_OR BINARY_XOR
 %left BINARY_AND
 %left LSHIFT RSHIFT
-%left '+' MINUS
-%left TIMES DIVIDE MODULO
+%left '+' '-'
+%left '*' '/' '%'
+%left NEG
 %right EXP
 
 %nonassoc <identifier> IDENTIFIER
@@ -55,7 +56,7 @@ line:
 
 stmt:
     IDENTIFIER '=' expr { $$ = stmt_assign($1, $3); free($1); expr_free($3); }
-  | PRINT expr { $$ = stmt_print($2); expr_free($2); }
+  | expr { $$ = stmt_print($1); expr_free($1); }
 ;
 
 expr:
@@ -63,6 +64,13 @@ expr:
   | IDENTIFIER { $$ = expr_identifier($1); free($1); }
   | STRING { $$ = expr_string($1); free($1); }
   | expr '+' expr { $$ = expr_binary(EXPR_BINARY_PLUS, $1, $3); expr_free($1); expr_free($3); }
+  | expr '*' expr { $$ = expr_binary(EXPR_BINARY_TIMES, $1, $3); expr_free($1); expr_free($3); }
+  | expr '-' expr { $$ = expr_binary(EXPR_BINARY_MINUS, $1, $3); expr_free($1); expr_free($3); }
+  | expr '/' expr { $$ = expr_binary(EXPR_BINARY_DIVIDE, $1, $3); expr_free($1); expr_free($3); }
+  | expr '%' expr { $$ = expr_binary(EXPR_BINARY_MODULO, $1, $3); expr_free($1); expr_free($3); }
+  | expr EXP expr { $$ = expr_binary(EXPR_BINARY_EXP, $1, $3); expr_free($1); expr_free($3); }
+  | '-' expr %prec NEG  { $$ = expr_unary(EXPR_UNARY_NEG, $2); expr_free($2); }
+  | '(' expr ')' { $$ = $2; }
 ;
 
 /* vim: set sw=4 et: */

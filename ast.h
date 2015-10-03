@@ -8,6 +8,7 @@ struct expr {
         EXPR_NUMBER,
         EXPR_IDENTIFIER,
         EXPR_STRING,
+        EXPR_UNARY,
         EXPR_BINARY,
     } type;
     union {
@@ -15,8 +16,19 @@ struct expr {
         char *identifier;
         char *string;
         struct {
+            enum expr_unary_type {
+                EXPR_UNARY_NEG,
+            } type;
+            struct expr *arg;
+        } unary;
+        struct {
             enum expr_binary_type {
                 EXPR_BINARY_PLUS,
+                EXPR_BINARY_TIMES,
+                EXPR_BINARY_MINUS,
+                EXPR_BINARY_DIVIDE,
+                EXPR_BINARY_MODULO,
+                EXPR_BINARY_EXP,
             } type;
             struct expr *lhs, *rhs;
         } binary;
@@ -28,6 +40,7 @@ struct expr *expr_copy(struct expr const *expr);
 struct expr *expr_number(int number);
 struct expr *expr_identifier(char const *identifier);
 struct expr *expr_string(char const *identifier);
+struct expr *expr_unary(enum expr_unary_type type, struct expr const *arg);
 struct expr *expr_binary(enum expr_binary_type type, struct expr const *lhs, struct expr const *rhs);
 
 struct stmt {
