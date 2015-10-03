@@ -5,6 +5,7 @@
 #include <interrupts.h>
 #include <mem.h>
 #include <task.h>
+#include <console_task.h>
 
 struct gdt_entry {
     uint16_t limit_low;
@@ -144,15 +145,57 @@ void interrupts_init(void) {
     __asm__ __volatile__("sti");
 }
 
+static char *console_data = NULL;
+
+static int unblock_console(void) {
+    for (struct task_list *tl = tasks; tl; tl = tl->next) {
+        if (tl->task->waiting_irq && tl->task->waiting_irq_no == 0x20) {
+            tl->task->waiting_irq_hits = 1;
+            return 1;
+        }
+    }
+    return 0;
+}
+
+static int unblock_waiter(char *console_data) {
+    for (struct task_list *tl = tasks; tl; tl = tl->next) {
+        if (tl->task->waiting_irq && tl->task->waiting_irq_no == 0x21) {
+            tl->task->waiting_irq_hits = 1;
+            tl->task->stack->eax = (uint32_t) console_data;
+            return 1;
+        }
+    }
+    return 0;
+}
+
 void *isr_handler(struct callback_registers *r) {
     int int_no = r->int_no;
     if (r->int_no == 0x80) {
         if (r->eax == 1) {
+            // wait on IRQ marked by r->ebx.
             current_task->task->waiting_irq = 1;
             current_task->task->waiting_irq_no = r->ebx;
-            current_task->task->waiting_irq_hits = 1;
+            current_task->task->waiting_irq_hits = 1;  // to allow initial pass.
         } else if (r->eax == 2) {
+            // wait on IRQ (from sys1).
             current_task->task->waiting_irq = 1;
+        } else if (r->eax == 3) {
+            // console has data
+            console_data = strndup(console_task_buf->buffer, console_task_buf->used);
+            if (!unblock_waiter(console_data)) {
+                current_task->task->waiting_irq = 1;
+                current_task->task->waiting_irq_no = 0x20;
+                current_task->task->waiting_irq_hits = 0;
+            }
+        } else if (r->eax == 4) {
+            // want console data
+            if (unblock_console()) {
+                r->eax = (uint32_t) console_data;
+            } else {
+                current_task->task->waiting_irq = 1;
+                current_task->task->waiting_irq_no = 0x21;
+                current_task->task->waiting_irq_hits = 0;
+            }
         }
 
         return tasks_switch(r);

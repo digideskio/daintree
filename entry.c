@@ -7,6 +7,7 @@
 #include <program.h>
 #include <task.h>
 #include <interrupts.h>
+#include <console_task.h>
 #include <build/parse.tab.h>
 
 struct lexer;
@@ -15,7 +16,7 @@ struct lexer *lexer_start_str(char const *str);
 void lexer_free(struct lexer *lexer);
 
 static void entry_continue(void);
-static void console(void);
+static void shell_task(void);
 
 void entry(multiboot_info_t *multiboot) {
     if (multiboot == 0) {
@@ -40,7 +41,8 @@ void entry_continue(void) {
     puts("daintree\n");
 
     tasks_init();
-    add_task(create_task("console", (uint32_t) console));
+    add_task(create_task("console", (uint32_t) console_task));
+    add_task(create_task("shell", (uint32_t) shell_task));
     
     interrupts_init();
 
@@ -49,12 +51,9 @@ void entry_continue(void) {
     }
 }
 
-static void console(void) {
+static void shell_task(void) {
     Context *context = context_new();
 
-    uint32_t r;
-    __asm__ __volatile__("int $0x80" : "=a" (r) : "0" (1), "b" (1));
-    
     while (1) {
         puts("> ");
         char *i = gets();
