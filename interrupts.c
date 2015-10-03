@@ -30,20 +30,6 @@ struct gdt_pointer {
 static struct gdt_entry gdt_entries[4];
 static struct gdt_pointer gdt_pointer;
 
-struct tss_entry {
-    uint32_t prev_tss;
-    uint32_t esp0, ss0;
-    uint32_t esp1, ss1, esp2, ss2, cr3, eip;
-    uint32_t eflags, eax, ecx, edx, ebx, esp, ebp;
-    uint32_t esi, edi;
-    uint32_t es, cs, ss, ds, fs, gs;
-    uint32_t ldt;
-    uint16_t trap;
-    uint16_t iomap_base;
-} __attribute__((__packed__));
-
-static struct tss_entry tss_entry;
-
 static char const *isr_messages[] = {
     "Division by zero",
     "Debug",
@@ -101,16 +87,6 @@ static void set_gdt_gate(uint8_t num, uint32_t base, uint32_t limit, uint8_t dpl
     set_gdt_gate_fields(num, base, limit, (code ? 0xa : 0x2) | (dpl << 5) | (0x9 << 4), 0xcf);
 }
 
-static void set_tss_gate(uint8_t num, uint16_t ss0, uint32_t esp0) {
-    uint32_t base = (uint32_t) &tss_entry;
-    uint32_t limit = base + sizeof(tss_entry);
-
-    memset(&tss_entry, 0, sizeof(tss_entry));
-    tss_entry.ss0 = ss0;
-    tss_entry.esp0 = esp0;
-    tss_entry.cs = 0x0b;
-}
-
 static void set_idt_gate(uint8_t idt, void (*callback)(), uint16_t isr_segment, uint8_t flags) {
     idt_entries[idt].offset_low = (uint32_t) callback & 0xffff;
     idt_entries[idt].selector = isr_segment;
@@ -125,10 +101,6 @@ void interrupts_init(void) {
     memset(&gdt_entries, 0, sizeof(gdt_entries));
     set_gdt_gate(1, 0, 0xffffffff, 0, 1);
     set_gdt_gate(2, 0, 0xffffffff, 0, 0);
-    set_tss_gate(3, 0x10, 0x10);
-
-    // FLUSH
-    // FLUSH TSS
 
     memset(&idt_entries, 0, sizeof(idt_entries));
 
