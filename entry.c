@@ -5,6 +5,7 @@
 #include <console.h>
 #include <multiboot.h>
 #include <program.h>
+#include <interrupts.h>
 #include <build/parse.tab.h>
 
 struct lexer;
@@ -22,6 +23,8 @@ void entry(multiboot_info_t *multiboot) {
 
     clear();
     puts("daintree\n");
+
+    interrupts_init();
 
     Context *context = context_new();
     

@@ -12,8 +12,8 @@ LDFLAGS := -melf_i386
 BUILDDIR := build
 TARGET := $(BUILDDIR)/daintree
 COPYDEST := C:/daintree
-CSRCS := entry.c console.c mem.c arch.c string.c ctype.c stdlib.c program.c ast.c crc32.c dict.c math.c
-ASRCS := entry.s
+CSRCS := entry.c interrupts.c console.c mem.c arch.c string.c ctype.c stdlib.c program.c ast.c crc32.c dict.c math.c
+ASRCS := entry.s interrupts.s
 LDFILE := daintree.ld
 OBJS := $(BUILDDIR)/parse.tab.o $(BUILDDIR)/lex.sv.o $(CSRCS:%.c=$(BUILDDIR)/%.c.o) $(ASRCS:%.s=$(BUILDDIR)/%.s.o)
 DEPS := $(BUILDDIR)/parse.tab.d $(BUILDDIR)/lex.sv.d $(CSRCS:%.c=$(BUILDDIR)/%.c.d)

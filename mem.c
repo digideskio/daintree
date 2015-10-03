@@ -8,7 +8,7 @@ struct heap_entry {
     struct heap_entry *prev, *next;
     uint32_t size;
     uint32_t free;
-} *heap;
+} __attribute__((__packed__)) *heap;
 
 uint32_t heap_size, heap_in_use;
 
