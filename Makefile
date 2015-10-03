@@ -15,8 +15,8 @@ COPYDEST := C:/daintree
 CSRCS := entry.c console.c mem.c arch.c string.c ctype.c stdlib.c program.c ast.c crc32.c dict.c
 ASRCS := entry.s
 LDFILE := daintree.ld
-OBJS := $(CSRCS:%.c=$(BUILDDIR)/%.c.o) $(ASRCS:%.s=$(BUILDDIR)/%.s.o) $(BUILDDIR)/lex.sv.o $(BUILDDIR)/parse.tab.o
-DEPS := $(CSRCS:%.c=$(BUILDDIR)/%.c.d) $(BUILDDIR)/lex.sv.d $(BUILDDIR)/parse.tab.d
+OBJS := $(BUILDDIR)/parse.tab.o $(BUILDDIR)/lex.sv.o $(CSRCS:%.c=$(BUILDDIR)/%.c.o) $(ASRCS:%.s=$(BUILDDIR)/%.s.o)
+DEPS := $(BUILDDIR)/parse.tab.d $(BUILDDIR)/lex.sv.d $(CSRCS:%.c=$(BUILDDIR)/%.c.d)
 MENU := menu.lst
 MENUDEST := C:/boot/grub/menu.lst
 IMGFILE := daintree.img
@@ -62,4 +62,4 @@ $(BUILDDIR)/lex.sv.c: lex.sv
 	sonavara < $< > $@
 
 clean:
-	-rm $(OBJS) $(TARGET) $(BUILDDIR)/{parse.tab.o,parse.tab.c,parse.tab.h,lex.sv.c,lex.sv.o}
+	-rm $(OBJS) $(DEPS) $(TARGET) $(BUILDDIR)/{parse.tab.c,parse.tab.h,lex.sv.c}
