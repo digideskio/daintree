@@ -146,6 +146,12 @@ void interrupts_init(void) {
 
 void *isr_handler(struct callback_registers *r) {
     int int_no = r->int_no;
+    if (r->int_no == 0x80) {
+        current_task->task->waiting_irq = 1;
+        current_task->task->waiting_irq_hits = 0;
+        return tasks_switch(r);
+    }
+
     putf("exception %d: %s\n", int_no, isr_messages[int_no] ? isr_messages[int_no] : "reserved");
     __asm__ __volatile__("hlt");
     return r;
@@ -157,11 +163,7 @@ void *irq_handler(struct callback_registers *r) {
     }
     out8(0x20, 0x20);
 
-    if (r->int_no == 0x20) {
-        return tasks_switch(r);
-    }
-
-    return r;
+    return tasks_switch(r);
 }
 
 // vim: set sw=4 et:

@@ -36,6 +36,8 @@ struct task *create_task(char const *name, uint32_t entry) {
         task->stack->eflags = 0x200;
     }
 
+    task->waiting_irq = 0;
+
     return task;
 }
 
@@ -43,11 +45,41 @@ void tasks_init(void) {
     current_task = add_task(create_task("idle", 0));
 }
 
-struct callback_registers *tasks_switch(struct callback_registers *stack) {
+static struct callback_registers *tasks_switch_internal(struct callback_registers *stack) {
+    for (struct task_list *tl = tasks; tl; tl = tl->next) {
+        if (tl->task->waiting_irq && tl->task->waiting_irq == stack->int_no - 0x20) {
+            ++tl->task->waiting_irq_hits;
+        }
+    }
+
     current_task->task->stack = stack;
-    current_task = 
-        current_task->next ? current_task->next : tasks;
-    return current_task->task->stack;
+    while (1) {
+        current_task = 
+            current_task->next ? current_task->next : tasks;
+
+        struct task *task = current_task->task;
+        if (task->waiting_irq) {
+            if (task->waiting_irq_hits > 0) {
+                --task->waiting_irq_hits;
+                return task->stack;
+            }
+        } else {
+            return task->stack;
+        }
+    }
 }
+
+struct callback_registers *tasks_switch(struct callback_registers *stack) {
+    stack = tasks_switch_internal(stack);
+    int x, y;
+    getcursor(&x, &y);
+    setcursor(79, 0);
+    puts("\b\b\b\b\b\b\b\b\b");
+    puts(current_task->task->name);
+    setcursor(x, y);
+    cursor();
+    return stack;
+}
+
 
 // vim: set sw=4 et:

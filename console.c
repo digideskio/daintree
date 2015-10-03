@@ -4,6 +4,7 @@
 #include <console.h>
 #include <mem.h>
 #include <string.h>
+#include <task.h>
 
 #define CURSOR_IDX 0x3d4
 #define CURSOR_DATA 0x3d5
@@ -89,6 +90,14 @@ void cursor(void) {
     out8(CURSOR_DATA, (idx >> 8) & 0xff);
     out8(CURSOR_IDX, CURSOR_LSB_IDX);
     out8(CURSOR_DATA, idx & 0xff);
+}
+
+void getcursor(int *x, int *y) {
+    *x = vx; *y = vy;
+}
+
+void setcursor(int x, int y) {
+    vx = x; vy = y;
 }
 
 void putc(char c) {
@@ -351,7 +360,10 @@ char *gets(void) {
 
     while (1) {
         int update_leds = 0;
-        __asm__ __volatile__("hlt");
+        current_task->task->waiting_irq = 1;
+
+        uint32_t ch32;
+        __asm__ __volatile__("int $0x80" : "=a" (ch32) : "0" (1));
         uint8_t ch = in8(0x60);
 
         if (ch & 0x80) {

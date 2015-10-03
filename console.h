@@ -7,6 +7,8 @@
 
 void scroll(void);
 void cursor(void);
+void getcursor(int *x, int *y);
+void setcursor(int x, int y);
 void putc(char c);
 void puts(char const *s);
 void putn(int n);
