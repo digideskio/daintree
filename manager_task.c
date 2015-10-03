@@ -35,6 +35,8 @@ void manager_task(void) {
         putc_at(&vx, &vy, '|');
         vx = 60; vy = i + 2;
         puts_at(&vx, &vy, "+-----------------+");
+
+        __asm__ __volatile__("int $0x80" : : "a" (5), "b" (100));
     }
 }
 

@@ -11,6 +11,7 @@ struct task {
     int waiting_irq;
     int waiting_irq_no;
     int waiting_irq_hits;
+    int waiting_ticks;
 };
 
 struct task_list {

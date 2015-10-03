@@ -37,6 +37,7 @@ struct task *create_task(char const *name, uint32_t entry) {
     }
 
     task->waiting_irq = 0;
+    task->waiting_ticks = 0;
 
     return task;
 }
@@ -52,14 +53,23 @@ struct callback_registers *tasks_switch(struct callback_registers *stack) {
             current_task->next ? current_task->next : tasks;
 
         struct task *task = current_task->task;
+
+        int pass = 1;
         if (task->waiting_irq) {
             if (task->waiting_irq_hits > 0) {
                 --task->waiting_irq_hits;
                 task->waiting_irq = 0;
+            } else {
+                pass = 0;
+            }
+        }
+
+        if (pass) {
+            if (task->waiting_ticks) {
+                --task->waiting_ticks;
+            } else {
                 return task->stack;
             }
-        } else {
-            return task->stack;
         }
     }
 }

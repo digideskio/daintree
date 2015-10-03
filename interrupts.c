@@ -172,7 +172,7 @@ void *isr_handler(struct callback_registers *r) {
     int int_no = r->int_no;
     if (r->int_no == 0x80) {
         if (r->eax == 1) {
-            // wait on IRQ marked by r->ebx.
+            // wait on IRQ marked by ebx.
             current_task->task->waiting_irq = 1;
             current_task->task->waiting_irq_no = r->ebx;
             current_task->task->waiting_irq_hits = 1;  // to allow initial pass.
@@ -196,6 +196,9 @@ void *isr_handler(struct callback_registers *r) {
                 current_task->task->waiting_irq_no = 0x21;
                 current_task->task->waiting_irq_hits = 0;
             }
+        } else if (r->eax == 5) {
+            // wait at least ebx ticks
+            current_task->task->waiting_ticks = r->ebx;
         }
 
         return tasks_switch(r);

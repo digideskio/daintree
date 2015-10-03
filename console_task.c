@@ -70,8 +70,7 @@ void console_task(void) {
 
     int ctrl = 0, shift = 0, alt = 0;
 
-    uint32_t r;
-    __asm__ __volatile__("int $0x80" : "=a" (r) : "0" (1), "b" (1));
+    __asm__ __volatile__("int $0x80" : : "a" (1), "b" (1));
 
     while (1) {
         int update_leds = 0;
@@ -127,7 +126,7 @@ void console_task(void) {
                     }
                 } else if (ch == '\n') {
                     putc(ch);
-                    __asm__ __volatile__("int $0x80" : "=a" (r) : "0" (3));
+                    __asm__ __volatile__("int $0x80" : : "a" (3));
                     console_task_buf->used = 0;
                 } else {
                     putc(ch);
@@ -145,7 +144,7 @@ void console_task(void) {
             out8(0x60, value);
         }
 
-        __asm__ __volatile__("int $0x80" : "=a" (r) : "0" (2));
+        __asm__ __volatile__("int $0x80" : : "a" (2));
     }
 
 }
