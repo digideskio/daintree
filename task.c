@@ -48,23 +48,24 @@ void tasks_init(void) {
 
 struct callback_registers *tasks_switch(struct callback_registers *stack) {
     current_task->task->stack = stack;
+
+    // Just prefer waiting_irq first, always.
+    for (struct task_list *tl = tasks; tl; tl = tl->next) {
+        struct task *task = tl->task;
+        if (task->waiting_irq && task->waiting_irq_hits) {
+            current_task = tl;
+            --task->waiting_irq_hits;
+            task->waiting_irq = 0;
+            return task->stack;
+        }
+    }
+
     while (1) {
         current_task = 
             current_task->next ? current_task->next : tasks;
 
         struct task *task = current_task->task;
-
-        int pass = 1;
-        if (task->waiting_irq) {
-            if (task->waiting_irq_hits > 0) {
-                --task->waiting_irq_hits;
-                task->waiting_irq = 0;
-            } else {
-                pass = 0;
-            }
-        }
-
-        if (pass) {
+        if (!task->waiting_irq) {
             if (task->waiting_ticks) {
                 --task->waiting_ticks;
             } else {
