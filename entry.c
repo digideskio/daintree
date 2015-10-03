@@ -44,8 +44,6 @@ void entry_continue(void) {
     
     interrupts_init();
 
-    puts("init sleep\n");
-
     while (1) {
         __asm__ __volatile__("hlt");
     }
