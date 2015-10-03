@@ -5,6 +5,7 @@
 #include <mem.h>
 #include <string.h>
 #include <math.h>
+#include <console.h>
 
 #define VAL_IS_NUMBER(v) ((v).raw & 1)
 #define VAL_EXTRACT_NUMBER(v) ((v).raw >> 1)
@@ -22,6 +23,8 @@
  * => Bignum
  */
 
+static val eval(struct expr const *expr, Context *context);
+
 static object *object_alloc(enum object_type type) {
     object *obj = malloc(sizeof(*obj));
     obj->type = type;
@@ -31,6 +34,19 @@ static object *object_alloc(enum object_type type) {
 object *object_string(char const *str) {
     object *obj = object_alloc(OBJECT_STRING);
     obj->string = strdup(str);
+    return obj;
+}
+
+object *object_list(struct expr_list const *list, Context *context) {
+    object *obj = object_alloc(OBJECT_LIST);
+    obj->list = NULL;
+    struct val_list **ptr = &obj->list;
+    while (list) {
+        *ptr = malloc(sizeof(**ptr));
+        (*ptr)->value = eval(list->expr, context);
+        ptr = &(*ptr)->next;
+        list = list->next;
+    }
     return obj;
 }
 
@@ -96,9 +112,34 @@ static val eval(struct expr const *expr, Context *context) {
         }
     case EXPR_STRING:
         return (val) object_string(expr->string);
+    case EXPR_LIST:
+        return (val) object_list(expr->list, context);
     }
     /* ?? */
     return (val) (uint32_t) 0;
+}
+
+static char *val_to_str(val const v) {
+    if (VAL_IS_NUMBER(v)) {
+        return sputf("%d", VAL_EXTRACT_NUMBER(v));
+    }
+
+    switch (v.object->type) {
+    case OBJECT_STRING:
+        return strdup(v.object->string);
+
+    case OBJECT_LIST:
+        {
+            struct buffer *buf = alloc_buffer();
+            append_buffer_char(buf, '[');
+            append_buffer_char(buf, ']');
+            char *r = strndup(buf->buffer, buf->used);
+            free_buffer(buf);
+            return r;
+        }
+    }
+
+    return strdup("?");
 }
 
 static void execute(struct stmt const *stmt, Context *context) {
@@ -111,16 +152,10 @@ static void execute(struct stmt const *stmt, Context *context) {
     case STMT_PRINT:
         {
             val v = eval(stmt->print, context);
-            if (VAL_IS_NUMBER(v)) {
-                putf("%d\n", VAL_EXTRACT_NUMBER(v));
-            } else {
-                switch (v.object->type) {
-                case OBJECT_STRING:
-                    putf("%s\n", v.object->string);
-                    break;
-                }
-            }
-            break;
+            char *s = val_to_str(v);
+            puts(s);
+            putc('\n');
+            free(s);
         }
     }
 }

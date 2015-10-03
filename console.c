@@ -258,6 +258,14 @@ void putf(char const *fmt, ...) {
     free(p);
 }
 
+char *sputf(char const *fmt, ...) {
+    va_list ap;
+    va_start(ap, fmt);
+    char *p;
+    vasputf(&p, fmt, ap);
+    return p;
+}
+
 void clear(void) {
     for (int i = 0; i < 80 * 25; ++i) {
         vmem[i * 2] = ' ';

@@ -7,20 +7,29 @@
 #include <ast.h>
 #include <dict.h>
 
-/* temp. This will be GC'd and based on the actual class system. */
-typedef struct {
-    enum object_type {
-        OBJECT_STRING
-    } type;
-    union {
-        char *string;
-    };
-} object;
+struct object_struct;
 
 typedef union {
    uint32_t raw;
-   object *object;
+   struct object_struct *object;
 } val;
+
+struct val_list {
+    val value;
+    struct val_list *next;
+};
+
+/* temp. This will be GC'd and based on the actual class system. */
+typedef struct object_struct {
+    enum object_type {
+        OBJECT_STRING,
+        OBJECT_LIST,
+    } type;
+    union {
+        char *string;
+        struct val_list *list;
+    };
+} object;
 
 typedef struct {
     struct dict *env;

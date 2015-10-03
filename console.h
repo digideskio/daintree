@@ -15,6 +15,7 @@ void putn(int n);
 int vasputf(char **p, char const *fmt, va_list ap);
 void putf_at(uint8_t *vx, uint8_t *vy, char const *fmt, ...);
 void putf(char const *fmt, ...);
+char *sputf(char const *fmt, ...);
 void clear(void);
 uint8_t readch(void);
 char *gets(void);

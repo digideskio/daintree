@@ -41,6 +41,9 @@ print
     BEGIN(string);
     context->buf = alloc_buffer();
 
+\*\*
+    return EXP;
+
 .
     return match[0];
 
