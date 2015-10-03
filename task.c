@@ -55,6 +55,7 @@ static struct callback_registers *tasks_switch_internal(struct callback_register
         if (task->waiting_irq) {
             if (task->waiting_irq_hits > 0) {
                 --task->waiting_irq_hits;
+                task->waiting_irq = 0;
                 return task->stack;
             }
         } else {
@@ -81,7 +82,7 @@ struct callback_registers *tasks_switch(struct callback_registers *stack) {
         puts(tl->task->name);
 
         if (tl->task->waiting_irq) {
-            putf(" W%d H%d", tl->task->waiting_irq, tl->task->waiting_irq_hits);
+            putf(" W%d H%d", tl->task->waiting_irq_no, tl->task->waiting_irq_hits);
         }
         
         int mx, my;

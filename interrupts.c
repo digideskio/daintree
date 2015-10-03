@@ -148,9 +148,11 @@ void *isr_handler(struct callback_registers *r) {
     int int_no = r->int_no;
     if (r->int_no == 0x80) {
         if (r->eax == 1) {
-            current_task->task->waiting_irq = r->ebx;
+            current_task->task->waiting_irq = 1;
+            current_task->task->waiting_irq_no = r->ebx;
             current_task->task->waiting_irq_hits = 1;
         } else if (r->eax == 2) {
+            current_task->task->waiting_irq = 1;
         }
 
         return tasks_switch(r);
@@ -168,7 +170,7 @@ void *irq_handler(struct callback_registers *r) {
     out8(0x20, 0x20);
 
     for (struct task_list *tl = tasks; tl; tl = tl->next) {
-        if (tl->task->waiting_irq && tl->task->waiting_irq == r->int_no - 0x20) {
+        if (tl->task->waiting_irq_no && tl->task->waiting_irq_no == r->int_no - 0x20) {
             ++tl->task->waiting_irq_hits;
         }
     }

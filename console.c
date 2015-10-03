@@ -359,13 +359,12 @@ char *gets(void) {
     int ctrl = 0, shift = 0, alt = 0;
 
     uint32_t r;
+    __asm__ __volatile__("int $0x80" : "=a" (r) : "0" (1), "b" (1));
 
     while (1) {
         int update_leds = 0;
 
-        puts("(read|");
         uint8_t ch = in8(0x60);
-        puts("get) ");
 
         if (ch & 0x80) {
             ch &= ~0x80;

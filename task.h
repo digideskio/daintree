@@ -9,6 +9,7 @@ struct task {
     char *name;
     struct callback_registers *stack;
     int waiting_irq;
+    int waiting_irq_no;
     int waiting_irq_hits;
 };
 
