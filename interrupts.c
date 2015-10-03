@@ -79,6 +79,7 @@ void interrupts_init(void) {
 void *isr_handler(struct modeswitch_registers *r) {
     int int_no = r->callback.int_no;
     putf("exception %d: %s\n", int_no, isr_messages[int_no] ? isr_messages[int_no] : "reserved");
+    __asm__ __volatile__("hlt");
     return r;
 }
 
