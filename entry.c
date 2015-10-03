@@ -13,6 +13,8 @@ extern struct lexer *active_lexer;
 struct lexer *lexer_start_str(char const *str);
 void lexer_free(struct lexer *lexer);
 
+static void entry_continue(void);
+
 void entry(multiboot_info_t *multiboot) {
     if (multiboot == 0) {
         puts("no multiboot info. halting.");
@@ -20,7 +22,18 @@ void entry(multiboot_info_t *multiboot) {
     }
 
     heap_init((uint32_t) &_kend, 0x100000 + (multiboot->mem_upper * 1024));
+    void *stack = malloc(0x2000);
+    __asm__ __volatile__("\
+        mov %%cr3, %%eax; \
+        mov %%eax, %%cr3" : : : "%eax");
+    __asm__ __volatile__("\
+        mov %%eax, %%esp; \
+        mov %%eax, %%ebp" : : "a" ((uint32_t) stack));
 
+    entry_continue();
+}
+
+void entry_continue(void) {
     clear();
     puts("daintree\n");
 
