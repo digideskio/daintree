@@ -3,6 +3,8 @@
 #ifndef __AST_H__
 #define __AST_H__
 
+struct expr_list;
+
 struct expr {
     enum expr_type {
         EXPR_NUMBER,
@@ -10,6 +12,7 @@ struct expr {
         EXPR_STRING,
         EXPR_UNARY,
         EXPR_BINARY,
+        EXPR_LIST,
     } type;
     union {
         int number;
@@ -32,6 +35,7 @@ struct expr {
             } type;
             struct expr *lhs, *rhs;
         } binary;
+        struct expr_list *list;
     };
 };
 
@@ -42,6 +46,7 @@ struct expr *expr_identifier(char const *identifier);
 struct expr *expr_string(char const *identifier);
 struct expr *expr_unary(enum expr_unary_type type, struct expr const *arg);
 struct expr *expr_binary(enum expr_binary_type type, struct expr const *lhs, struct expr const *rhs);
+struct expr *expr_list(struct expr_list const *expr_list);
 
 struct stmt {
     enum stmt_type {
@@ -69,6 +74,15 @@ struct stmt_list {
 void stmt_list_append(struct stmt_list **list, struct stmt const *stmt);
 void stmt_list_free(struct stmt_list *list);
 
+struct expr_list {
+    struct expr *expr;
+    struct expr_list *next;
+};
+
+void expr_list_append(struct expr_list **list, struct expr const *expr);
+struct expr_list *expr_list_copy(struct expr_list const *list);
+void expr_list_free(struct expr_list *list);
+
 typedef struct {
     struct stmt_list *stmt_list;
 } Program;
@@ -79,6 +93,7 @@ void yyerror(Program *program, char const *message);
 union token {
     struct stmt *stmt;
     struct expr *expr;
+    struct expr_list *exprlist;
 
     char *identifier;
     char *string;

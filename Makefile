@@ -59,7 +59,7 @@ $(BUILDDIR)/parse.tab.c: parse.y
 	mv parse.tab.? $(BUILDDIR)/
 
 $(BUILDDIR)/lex.sv.c: lex.sv
-	sonavara < $< > $@
+	sonavara < $< > $@ || (rm $@; false)
 
 clean:
 	-rm $(OBJS) $(DEPS) $(TARGET) $(BUILDDIR)/{parse.tab.c,parse.tab.h,lex.sv.c}

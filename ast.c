@@ -23,6 +23,10 @@ void expr_free(struct expr *expr) {
         expr_free(expr->binary.rhs);
         break;
 
+    case EXPR_LIST:
+        expr_list_free(expr->list);
+        break;
+
     default:
         /* do nothing */
         break;
@@ -52,6 +56,9 @@ struct expr *expr_copy(struct expr const *expr) {
         copy->binary.type = expr->binary.type;
         copy->binary.lhs = expr_copy(expr->binary.lhs);
         copy->binary.rhs = expr_copy(expr->binary.rhs);
+        break;
+    case EXPR_LIST:
+        copy->list = expr_list_copy(expr->list);
         break;
     }
 
@@ -94,6 +101,12 @@ struct expr *expr_binary(enum expr_binary_type type, struct expr const *lhs, str
     expr->binary.type = type;
     expr->binary.lhs = expr_copy(lhs);
     expr->binary.rhs = expr_copy(rhs);
+    return expr;
+}
+
+struct expr *expr_list(struct expr_list const *expr_list) {
+    struct expr *expr = expr_alloc(EXPR_LIST);
+    expr->list = expr_list_copy(expr_list);
     return expr;
 }
 
@@ -165,4 +178,35 @@ void stmt_list_free(struct stmt_list *list) {
     }
 }
 
+void expr_list_append(struct expr_list **list, struct expr const *expr) {
+    while (*list) {
+        list = &(*list)->next;
+    }
+
+    *list = malloc(sizeof(**list));
+    (*list)->expr = expr_copy(expr);
+    (*list)->next = NULL;
+}
+
+struct expr_list *expr_list_copy(struct expr_list const *list) {
+    struct expr_list *ret = NULL;
+    struct expr_list **write = &ret;
+
+    while (list) {
+        expr_list_append(write, list->expr);
+        write = &(*write)->next;
+        list = list->next;
+    }
+
+    return ret;
+}
+
+void expr_list_free(struct expr_list *list) {
+    while (list) {
+        expr_free(list->expr);
+        struct expr_list *next = list->next;
+        free(list);
+        list = next;
+    }
+}
 /* vim: set sw=4 et: */
