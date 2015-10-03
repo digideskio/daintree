@@ -3,16 +3,13 @@
 #ifndef __INTERRUPTS_H__
 #define __INTERRUPTS_H__
 
+#include <arch.h>
+
 struct callback_registers {
     uint32_t ds;
     uint32_t edi, esi, ebp, esp, ebx, edx, ecx, eax;
     uint32_t int_no, err_code;
     uint32_t eip, cs, eflags;
-} __attribute__((__packed__));
-
-struct modeswitch_registers {
-    struct callback_registers callback;
-    uint32_t useresp, ss;
 } __attribute__((__packed__));
 
 void interrupts_init(void);

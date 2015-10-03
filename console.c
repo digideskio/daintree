@@ -351,7 +351,8 @@ char *gets(void) {
 
     while (1) {
         int update_leds = 0;
-        uint8_t ch = readch();
+        __asm__ __volatile__("hlt");
+        uint8_t ch = in8(0x60);
 
         if (ch & 0x80) {
             ch &= ~0x80;

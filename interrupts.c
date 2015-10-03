@@ -4,6 +4,7 @@
 #include <console.h>
 #include <interrupts.h>
 #include <mem.h>
+#include <task.h>
 
 struct gdt_entry {
     uint16_t limit_low;
@@ -143,18 +144,23 @@ void interrupts_init(void) {
     __asm__ __volatile__("sti");
 }
 
-void *isr_handler(struct modeswitch_registers *r) {
-    int int_no = r->callback.int_no;
+void *isr_handler(struct callback_registers *r) {
+    int int_no = r->int_no;
     putf("exception %d: %s\n", int_no, isr_messages[int_no] ? isr_messages[int_no] : "reserved");
     __asm__ __volatile__("hlt");
     return r;
 }
 
-void *irq_handler(struct modeswitch_registers *r) {
-    if (r->callback.int_no >= 0x28) {
+void *irq_handler(struct callback_registers *r) {
+    if (r->int_no >= 0x28) {
         out8(0xa0, 0x20);
     }
     out8(0x20, 0x20);
+
+    if (r->int_no == 0x20) {
+        return tasks_switch(r);
+    }
+
     return r;
 }
 

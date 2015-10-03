@@ -5,6 +5,7 @@
 #include <console.h>
 #include <multiboot.h>
 #include <program.h>
+#include <task.h>
 #include <interrupts.h>
 #include <build/parse.tab.h>
 
@@ -14,6 +15,7 @@ struct lexer *lexer_start_str(char const *str);
 void lexer_free(struct lexer *lexer);
 
 static void entry_continue(void);
+static void console(void);
 
 void entry(multiboot_info_t *multiboot) {
     if (multiboot == 0) {
@@ -37,8 +39,19 @@ void entry_continue(void) {
     clear();
     puts("daintree\n");
 
+    tasks_init();
+    add_task(create_task("console", (uint32_t) console));
+    
     interrupts_init();
 
+    puts("init sleep\n");
+
+    while (1) {
+        __asm__ __volatile__("hlt");
+    }
+}
+
+static void console(void) {
     Context *context = context_new();
     
     while (1) {
