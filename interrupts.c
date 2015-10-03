@@ -74,6 +74,27 @@ void interrupts_init(void) {
     idt_pointer.ridt = (uint32_t) idt_entries;
 
     __asm__ __volatile__("lidt %0" : : "m" (idt_pointer));
+
+    out8(0x20, 0x11); out8(0xa0, 0x11);
+    // mapping to 0x20/0x28 here
+    out8(0x21, 0x20); out8(0xa1, 0x28);
+    out8(0x21, 0x04); out8(0xa1, 0x02);
+    out8(0x21, 0x01); out8(0xa1, 0x01);
+    out8(0x21, 0x00); out8(0xa1, 0x00);
+
+#define SET_IRQ_GATE(n) set_idt_gate(0x2##n, irq##n, 0x08, 0x8e)
+    SET_IRQ_GATE(0); SET_IRQ_GATE(1); SET_IRQ_GATE(2); SET_IRQ_GATE(3);
+    SET_IRQ_GATE(4); SET_IRQ_GATE(5); SET_IRQ_GATE(6); SET_IRQ_GATE(7);
+    SET_IRQ_GATE(8); SET_IRQ_GATE(9); SET_IRQ_GATE(a); SET_IRQ_GATE(b);
+    SET_IRQ_GATE(c); SET_IRQ_GATE(d); SET_IRQ_GATE(e); SET_IRQ_GATE(f);
+#undef SET_IRQ_GATE
+
+    uint16_t timer = 0x1234dc / 100;
+    out8(0x43, 0x36);
+    out8(0x40, timer & 0xff);
+    out8(0x40, (timer >> 8) & 0xff);
+
+    __asm__ __volatile__("sti");
 }
 
 void *isr_handler(struct modeswitch_registers *r) {
