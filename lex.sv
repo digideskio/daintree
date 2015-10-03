@@ -37,12 +37,12 @@ print
 
 [ \t]+
 
-.
-    return match[0];
-
 "
     BEGIN(string);
     context->buf = alloc_buffer();
+
+.
+    return match[0];
 
 *mode string
 
