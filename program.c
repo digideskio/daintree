@@ -11,7 +11,7 @@
 #define VAL_EXTRACT_NUMBER(v) ((v).raw >> 1)
 
 /*
- * NOTE:
+ * NOTE (32-bit):
  *
  * irb(main):021:0> (2 ** 30).class
  * => Bignum
