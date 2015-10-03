@@ -45,7 +45,7 @@ void tasks_init(void) {
     current_task = add_task(create_task("idle", 0));
 }
 
-static struct callback_registers *tasks_switch_internal(struct callback_registers *stack) {
+struct callback_registers *tasks_switch(struct callback_registers *stack) {
     current_task->task->stack = stack;
     while (1) {
         current_task = 
@@ -63,42 +63,5 @@ static struct callback_registers *tasks_switch_internal(struct callback_register
         }
     }
 }
-
-struct callback_registers *tasks_switch(struct callback_registers *stack) {
-    stack = tasks_switch_internal(stack);
-    int x, y;
-    getcursor(&x, &y);
-
-    setcursor(60, 0); puts("+-----------------+");
-    int i = 0;
-    for (struct task_list *tl = tasks; tl; tl = tl->next) {
-        setcursor(60, i + 1);
-        puts("| ");
-        if (current_task == tl) {
-            puts("*");
-        } else {
-            puts(" ");
-        }
-        puts(tl->task->name);
-
-        if (tl->task->waiting_irq) {
-            putf(" W%d H%d", tl->task->waiting_irq_no, tl->task->waiting_irq_hits);
-        }
-        
-        int mx, my;
-        getcursor(&mx, &my);
-        while (mx < 78) {
-            puts(" ");
-            ++mx;
-        }
-        puts("|");
-        ++i;
-    }
-    setcursor(60, i + 1); puts("+-----------------+");
-    setcursor(x, y);
-    cursor();
-    return stack;
-}
-
 
 // vim: set sw=4 et:

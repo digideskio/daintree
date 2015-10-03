@@ -8,6 +8,7 @@
 #include <task.h>
 #include <interrupts.h>
 #include <console_task.h>
+#include <manager_task.h>
 #include <build/parse.tab.h>
 
 struct lexer;
@@ -43,6 +44,7 @@ void entry_continue(void) {
     tasks_init();
     add_task(create_task("console", (uint32_t) console_task));
     add_task(create_task("shell", (uint32_t) shell_task));
+    add_task(create_task("manager", (uint32_t) manager_task));
     
     interrupts_init();
 

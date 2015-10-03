@@ -41,44 +41,46 @@ void cursor(void) {
     out8(CURSOR_DATA, idx & 0xff);
 }
 
-void getcursor(int *x, int *y) {
-    *x = vx; *y = vy;
-}
-
-void setcursor(int x, int y) {
-    vx = x; vy = y;
+void putc_at(uint8_t *vx, uint8_t *vy, char c) {
+    if (c == '\n') {
+        *vx = 0;
+        ++*vy;
+    } else if (c == '\t') {
+        *vx += 8 - (*vx % 8);
+    } else if (c == '\b') {
+        if (!*vx) {
+            if (*vy) {
+                --*vy;
+                *vx = 79;
+            }
+        } else {
+            --*vx;
+        }
+        vmem[(*vy * 80 + *vx) * 2] = ' ';
+    } else {
+        vmem[(*vy * 80 + *vx) * 2] = c;
+        vmem[(*vy * 80 + *vx) * 2 + 1] = 0x07;
+        ++*vx;
+    }
 }
 
 void putc(char c) {
-    if (c == '\n') {
-        vx = 0;
-        ++vy;
-    } else if (c == '\t') {
-        vx += 8 - (vx % 8);
-    } else if (c == '\b') {
-        if (!vx) {
-            if (vy) {
-                --vy;
-                vx = 79;
-            }
-        } else {
-            --vx;
-        }
-        vmem[(vy * 80 + vx) * 2] = ' ';
-    } else {
-        vmem[(vy * 80 + vx) * 2] = c;
-        vmem[(vy * 80 + vx) * 2 + 1] = 0x07;
-        ++vx;
-    }
+    putc_at(&vx, &vy, c);
     scroll();
     cursor();
 }
 
-void puts(char const *s) {
+void puts_at(uint8_t *vx, uint8_t *vy, char const *s) {
     char c;
     while ((c = *s++)) {
-        putc(c);
+        putc_at(vx, vy, c);
     }
+}
+
+void puts(char const *s) {
+    puts_at(&vx, &vy, s);
+    scroll();
+    cursor();
 }
 
 void putn(int n) {
@@ -236,6 +238,15 @@ int vasputf(char **p, char const *fmt, va_list ap) {
     *p = strndup(buf->buffer, used);
     free_buffer(buf);
     return used;
+}
+
+void putf_at(uint8_t *vx, uint8_t *vy, char const *fmt, ...) {
+    va_list ap;
+    va_start(ap, fmt);
+    char *p;
+    vasputf(&p, fmt, ap);
+    puts_at(vx, vy, p);
+    free(p);
 }
 
 void putf(char const *fmt, ...) {

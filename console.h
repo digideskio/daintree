@@ -7,12 +7,13 @@
 
 void scroll(void);
 void cursor(void);
-void getcursor(int *x, int *y);
-void setcursor(int x, int y);
+void putc_at(uint8_t *vx, uint8_t *vy, char c);
 void putc(char c);
+void puts_at(uint8_t *vx, uint8_t *vy, char const *s);
 void puts(char const *s);
 void putn(int n);
 int vasputf(char **p, char const *fmt, va_list ap);
+void putf_at(uint8_t *vx, uint8_t *vy, char const *fmt, ...);
 void putf(char const *fmt, ...);
 void clear(void);
 uint8_t readch(void);
