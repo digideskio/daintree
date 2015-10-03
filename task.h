@@ -18,6 +18,7 @@ struct task_list {
 };
 
 extern struct task_list *current_task;
+extern struct task_list *tasks;
 
 struct task_list *add_task(struct task *task);
 struct task *create_task(char const *name, uint32_t entry);

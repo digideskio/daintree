@@ -358,13 +358,14 @@ char *gets(void) {
     struct buffer *buf = alloc_buffer();
     int ctrl = 0, shift = 0, alt = 0;
 
+    uint32_t r;
+
     while (1) {
         int update_leds = 0;
-        current_task->task->waiting_irq = 1;
 
-        uint32_t ch32;
-        __asm__ __volatile__("int $0x80" : "=a" (ch32) : "0" (1));
+        puts("(read|");
         uint8_t ch = in8(0x60);
+        puts("get) ");
 
         if (ch & 0x80) {
             ch &= ~0x80;
@@ -431,6 +432,8 @@ char *gets(void) {
             wait_kb();
             out8(0x60, value);
         }
+
+        __asm__ __volatile__("int $0x80" : "=a" (r) : "0" (2));
     }
 
 done: { }

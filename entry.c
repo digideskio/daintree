@@ -51,6 +51,9 @@ void entry_continue(void) {
 
 static void console(void) {
     Context *context = context_new();
+
+    uint32_t r;
+    __asm__ __volatile__("int $0x80" : "=a" (r) : "0" (1), "b" (1));
     
     while (1) {
         puts("> ");

@@ -46,12 +46,6 @@ void tasks_init(void) {
 }
 
 static struct callback_registers *tasks_switch_internal(struct callback_registers *stack) {
-    for (struct task_list *tl = tasks; tl; tl = tl->next) {
-        if (tl->task->waiting_irq && tl->task->waiting_irq == stack->int_no - 0x20) {
-            ++tl->task->waiting_irq_hits;
-        }
-    }
-
     current_task->task->stack = stack;
     while (1) {
         current_task = 
@@ -73,9 +67,33 @@ struct callback_registers *tasks_switch(struct callback_registers *stack) {
     stack = tasks_switch_internal(stack);
     int x, y;
     getcursor(&x, &y);
-    setcursor(79, 0);
-    puts("\b\b\b\b\b\b\b\b\b");
-    puts(current_task->task->name);
+
+    setcursor(60, 0); puts("+-----------------+");
+    int i = 0;
+    for (struct task_list *tl = tasks; tl; tl = tl->next) {
+        setcursor(60, i + 1);
+        puts("| ");
+        if (current_task == tl) {
+            puts("*");
+        } else {
+            puts(" ");
+        }
+        puts(tl->task->name);
+
+        if (tl->task->waiting_irq) {
+            putf(" W%d H%d", tl->task->waiting_irq, tl->task->waiting_irq_hits);
+        }
+        
+        int mx, my;
+        getcursor(&mx, &my);
+        while (mx < 78) {
+            puts(" ");
+            ++mx;
+        }
+        puts("|");
+        ++i;
+    }
+    setcursor(60, i + 1); puts("+-----------------+");
     setcursor(x, y);
     cursor();
     return stack;
