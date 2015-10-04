@@ -51,7 +51,7 @@ object *object_list(struct expr_list const *list, Context *context) {
 
 object *object_dict(struct expr_list const *dict, Context *context) {
     object *obj = object_alloc(OBJECT_DICT);
-    obj->dict = dict_create(stringdict_crc, NULL);
+    obj->dict = dict_create(stringdict_crc, (dict_copy_f) strdup, free, NULL);
 
     while (dict) {
         val key = eval(dict->expr, context);
@@ -74,7 +74,7 @@ object *object_dict(struct expr_list const *dict, Context *context) {
     return obj;
 }
 
-static int mark_dict(void *data, void *extra) {
+static int mark_dict(void const *key, void *data, void *extra) {
     val v = (val) (object *) data;
     if (VAL_IS_OBJECT(v)) {
         object_mark(VAL_OBJECT(v));
@@ -245,15 +245,16 @@ struct dict_to_str {
 
 static char *val_to_str(val const v);
 
-static int dict_to_str_helper(void *data, void *extra) {
+static int dict_to_str_helper(void const *key, void *data, void *extra) {
     struct dict_to_str *e = extra;
 
     if (e->i++) {
         append_buffer_str(e->buf, ", ");
     }
 
-    append_buffer_str(e->buf, "?");
-    append_buffer_str(e->buf, ": ");
+    append_buffer_char(e->buf, '"');
+    append_buffer_str(e->buf, key);
+    append_buffer_str(e->buf, "\": ");
     char *r = val_to_str((val) (object *)data);
     append_buffer_str(e->buf, r);
     free(r);
@@ -331,7 +332,7 @@ static void execute(struct stmt const *stmt, Context *context) {
 
 Context *context_new(void) {
     Context *context = malloc(sizeof(*context));
-    context->env = dict_create(stringdict_crc, NULL);
+    context->env = dict_create(stringdict_crc, (dict_copy_f) strdup, free, NULL);
     return context;
 }
 

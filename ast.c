@@ -67,6 +67,10 @@ struct expr *expr_copy(struct expr const *expr) {
     case EXPR_DICT:
         copy->dict = expr_list_copy(expr->dict);
         break;
+    case EXPR_ATTR:
+        copy->attr.expr = expr_copy(expr->attr.expr);
+        copy->attr.identifier = strdup(expr->attr.identifier);
+        break;
     }
 
     return copy;

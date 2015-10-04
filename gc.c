@@ -20,7 +20,7 @@ object *gc_track(object *object) {
     return object;
 }
 
-static int mark(void *data, void *extra) {
+static int mark(void const *key, void *data, void *extra) {
     val v = (val) (object *) data;
     if (VAL_IS_OBJECT(v)) {
         object_mark(VAL_OBJECT(v));

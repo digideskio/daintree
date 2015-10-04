@@ -8,7 +8,9 @@
 struct _node;
 
 struct dict {
-    dict_hash_f hashF;
+    dict_hash_f keyhashF;
+    dict_copy_f keycopyF;
+    dict_free_f keyfreeF;
     dict_free_f freeF;
     struct _node *root;
 };
@@ -17,20 +19,23 @@ struct _node {
     uint8_t red;
     dict_hash_t key_hash;
     void *data;
+    void *key;
     struct _node *link[2];
 };
 
-struct dict *dict_create(dict_hash_f hashF, dict_free_f freeF) {
+struct dict *dict_create(dict_hash_f keyhashF, dict_copy_f keycopyF, dict_free_f keyfreeF, dict_free_f freeF) {
     struct dict *bt = malloc(sizeof(*bt));
-    bt->hashF = hashF;
+    bt->keyhashF = keyhashF;
+    bt->keycopyF = keycopyF;
+    bt->keyfreeF = keyfreeF;
     bt->freeF = freeF;
     bt->root = NULL;
     return bt;
 }
 
 static dict_hash_t _hash(const struct dict *bt, const void *key) {
-    if (bt->hashF) {
-        return bt->hashF(key);
+    if (bt->keyhashF) {
+        return bt->keyhashF(key);
     }
 
     return (dict_hash_t)(unsigned long)key;
@@ -57,10 +62,11 @@ static struct _node *_double(struct _node *root, int dir) {
     return _single(root, dir);
 }
 
-static struct _node *_make(dict_hash_t key_hash, void *data) {
+static struct _node *_make(dict_hash_t key_hash, void *key_copy, void *data) {
     struct _node *n = malloc(sizeof(*n));
     n->red = 1;
     n->key_hash = key_hash;
+    n->key = key_copy;
     n->data = data;
     n->link[0] = NULL;
     n->link[1] = NULL;
@@ -68,17 +74,17 @@ static struct _node *_make(dict_hash_t key_hash, void *data) {
 }
 
 static void *_inssearch(
-        struct dict *bt, const void *key, void *data, int replace) {
+        struct dict *bt, void const *key, void *data, int replace) {
     /* First, hash the data. */
     dict_hash_t key_hash = _hash(bt, key);
 
     if (!bt->root) {
-        bt->root = _make(key_hash, data);
+        bt->root = _make(key_hash, bt->keycopyF ? bt->keycopyF(key) : NULL, data);
         bt->root->red = 0;
         return NULL;
     }
 
-    struct _node head = {0, 0, 0, {0, 0}};    /* false root (black) */
+    struct _node head = {0, 0, 0, 0, {0, 0}};    /* false root (black) */
     struct _node *g = NULL,
                  *t = &head,
                  *p = NULL,
@@ -91,7 +97,7 @@ static void *_inssearch(
 
     for (;;) {
         if (!q && !inserted && !rv) {
-            p->link[dir] = q = _make(key_hash, data);
+            p->link[dir] = q = _make(key_hash, bt->keycopyF ? bt->keycopyF(key) : NULL, data);
             inserted = 1;
         } else if (_red(q->link[0]) && _red(q->link[1])) {
             q->red = 1;
@@ -112,9 +118,13 @@ static void *_inssearch(
         if (q->key_hash == key_hash) {
             if (!inserted) {
                 if (replace || !q->data) {
+                    if (bt->keyfreeF && q->key) {
+                        bt->keyfreeF(q->key);
+                    }
                     if (bt->freeF) {
                         bt->freeF(q->data);
                     }
+                    q->key = bt->keycopyF ? bt->keycopyF(key) : NULL;
                     q->data = data;
                 } else {
                     /* we've not inserted anything & we're not out to replace
@@ -167,20 +177,24 @@ void *dict_search_insert(struct dict *bt, const void *key, void *data) {
     return _inssearch(bt, key, data, 0);
 }
 
-static void _free_subtree(dict_free_f f, struct _node *n) {
-    if (f) {
-        f(n->data);
+static void _free_subtree(dict_free_f keyfreeF, dict_free_f freeF, struct _node *n) {
+    if (keyfreeF && n->key) {
+        keyfreeF(n->key);
+    }
+
+    if (freeF) {
+        freeF(n->data);
     }
 
     /* We check for left and right here, rather than checking for non-NULL n
      * inside the subsequent call, as it reduces the number of function calls
      * by a single order of magnitude! */
     if (n->link[0]) {
-        _free_subtree(f, n->link[0]);
+        _free_subtree(keyfreeF, freeF, n->link[0]);
     }
 
     if (n->link[1]) {
-        _free_subtree(f, n->link[1]);
+        _free_subtree(keyfreeF, freeF, n->link[1]);
     }
 
     free(n);
@@ -193,7 +207,7 @@ void dict_remove(struct dict *bt, const void *key) {
         return;
     }
 
-    struct _node head = {0, 0, 0, {0, 0}},
+    struct _node head = {0, 0, 0, 0, {0, 0}},
                  *q = &head,
                  *p = NULL,
                  *g = NULL,
@@ -258,12 +272,12 @@ void dict_remove(struct dict *bt, const void *key) {
     }
 }
 
-static int _foreach(struct _node *node, void *extra, int (*fn)(void *data, void *extra)) {
+static int _foreach(struct _node *node, void *extra, int (*fn)(void const *key, void *data, void *extra)) {
     if (node->link[0] && _foreach(node->link[0], extra, fn)) {
         return 1;
     }
 
-    if (fn(node->data, extra)) {
+    if (fn(node->key, node->data, extra)) {
         return 1;
     }
 
@@ -274,7 +288,7 @@ static int _foreach(struct _node *node, void *extra, int (*fn)(void *data, void 
     return 0;
 }
 
-void dict_foreach(struct dict *bt, void *extra, int (*fn)(void *data, void *extra)) {
+void dict_foreach(struct dict *bt, void *extra, int (*fn)(void const *key, void *data, void *extra)) {
     if (bt->root) {
         _foreach(bt->root, extra, fn);
     }
@@ -290,7 +304,7 @@ int dict_empty(const struct dict *bt) {
 
 void dict_free(struct dict *bt) {
     if (bt->root) {
-        _free_subtree(bt->freeF, bt->root);
+        _free_subtree(bt->keyfreeF, bt->freeF, bt->root);
     }
 
     free(bt);
