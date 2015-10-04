@@ -6,9 +6,12 @@
 #include <string.h>
 #include <math.h>
 #include <console.h>
+#include <gc.h>
 
 #define VAL_IS_NUMBER(v) ((v).raw & 1)
-#define VAL_EXTRACT_NUMBER(v) ((v).raw >> 1)
+#define VAL_IS_OBJECT(v) (!VAL_IS_NUMBER(v))
+#define VAL_NUMBER(v) ((v).raw >> 1)
+#define VAL_OBJECT(v) ((v).object)
 
 /*
  * NOTE (32-bit):
@@ -34,7 +37,7 @@ static object *object_alloc(enum object_type type) {
 object *object_string(char const *str) {
     object *obj = object_alloc(OBJECT_STRING);
     obj->string = strdup(str);
-    return obj;
+    return gc_track(obj);
 }
 
 object *object_list(struct expr_list const *list, Context *context) {
@@ -48,7 +51,30 @@ object *object_list(struct expr_list const *list, Context *context) {
         *ptr = NULL;
         list = list->next;
     }
-    return obj;
+    return gc_track(obj);
+}
+
+void object_free(object *object) {
+    switch (object->type) {
+    case OBJECT_STRING:
+        free(object->string);
+        break;
+    case OBJECT_LIST:
+        {
+            struct val_list *list = object->list;
+            while (list) {
+                if (VAL_IS_OBJECT(list->value)) {
+                    object_free(VAL_OBJECT(list->value));
+                }
+                struct val_list *next = list->next;
+                free(list);
+                list = next;
+            }
+            break;
+        }
+    }
+
+    free(object);
 }
 
 static val context_get(Context *context, char const *key) {
@@ -77,7 +103,7 @@ static val eval(struct expr const *expr, Context *context) {
                 return val_number(0);
             }
 
-            int an = VAL_EXTRACT_NUMBER(arg);
+            int an = VAL_NUMBER(arg);
 
             switch (expr->unary.type) {
             case EXPR_UNARY_NEG:
@@ -93,8 +119,8 @@ static val eval(struct expr const *expr, Context *context) {
                 return val_number(0);
             }
 
-            int ln = VAL_EXTRACT_NUMBER(lhs),
-                rn = VAL_EXTRACT_NUMBER(rhs);
+            int ln = VAL_NUMBER(lhs),
+                rn = VAL_NUMBER(rhs);
 
             switch (expr->binary.type) {
             case EXPR_BINARY_PLUS:
@@ -122,7 +148,7 @@ static val eval(struct expr const *expr, Context *context) {
 
 static char *val_to_str(val const v) {
     if (VAL_IS_NUMBER(v)) {
-        return sputf("%d", VAL_EXTRACT_NUMBER(v));
+        return sputf("%d", VAL_NUMBER(v));
     }
 
     switch (v.object->type) {
@@ -188,6 +214,8 @@ void program_run(Program const *program, Context *context) {
     for (; list; list = list->next) {
         execute(list->stmt, context);
     }
+
+    gc_empty();
 }
 
 /* vim: set sw=4 et: */

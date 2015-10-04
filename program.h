@@ -31,6 +31,8 @@ typedef struct object_struct {
     };
 } object;
 
+void object_free(object *object);
+
 typedef struct {
     struct dict *env;
 } Context;
