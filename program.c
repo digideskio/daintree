@@ -8,11 +8,6 @@
 #include <console.h>
 #include <gc.h>
 
-#define VAL_IS_NUMBER(v) ((v).raw & 1)
-#define VAL_IS_OBJECT(v) (!VAL_IS_NUMBER(v))
-#define VAL_NUMBER(v) ((v).raw >> 1)
-#define VAL_OBJECT(v) ((v).object)
-
 /*
  * NOTE (32-bit):
  *
@@ -48,9 +43,9 @@ object *object_list(struct expr_list const *list, Context *context) {
         *ptr = malloc(sizeof(**ptr));
         (*ptr)->value = eval(list->expr, context);
         ptr = &(*ptr)->next;
-        *ptr = NULL;
         list = list->next;
     }
+    *ptr = NULL;
     return gc_track(obj);
 }
 
@@ -63,9 +58,6 @@ void object_free(object *object) {
         {
             struct val_list *list = object->list;
             while (list) {
-                if (VAL_IS_OBJECT(list->value)) {
-                    object_free(VAL_OBJECT(list->value));
-                }
                 struct val_list *next = list->next;
                 free(list);
                 list = next;
@@ -214,8 +206,6 @@ void program_run(Program const *program, Context *context) {
     for (; list; list = list->next) {
         execute(list->stmt, context);
     }
-
-    gc_empty();
 }
 
 /* vim: set sw=4 et: */

@@ -6,7 +6,7 @@
 #include <program.h>
 
 object *gc_track(object *object);
-void gc_empty(void);
+void gc_empty(Context *root);
 
 #endif
 

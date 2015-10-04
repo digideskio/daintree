@@ -7,6 +7,11 @@
 #include <ast.h>
 #include <dict.h>
 
+#define VAL_IS_NUMBER(v) ((v).raw & 1)
+#define VAL_IS_OBJECT(v) (!VAL_IS_NUMBER(v))
+#define VAL_NUMBER(v) ((v).raw >> 1)
+#define VAL_OBJECT(v) ((v).object)
+
 struct object_struct;
 
 typedef union {
@@ -25,6 +30,7 @@ typedef struct object_struct {
         OBJECT_STRING,
         OBJECT_LIST,
     } type;
+    uint8_t mark;
     union {
         char *string;
         struct val_list *list;

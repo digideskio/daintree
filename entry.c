@@ -9,6 +9,7 @@
 #include <interrupts.h>
 #include <console_task.h>
 #include <manager_task.h>
+#include <gc.h>
 #include <build/parse.tab.h>
 
 struct lexer;
@@ -74,6 +75,8 @@ static void shell_task(void) {
         } else {
             putf("parse error\n");
         }
+
+        gc_empty(context);
 
         lexer_free(active_lexer);
 

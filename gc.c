@@ -20,15 +20,32 @@ object *gc_track(object *object) {
     return object;
 }
 
-void gc_empty(void) {
-    struct track_entry *te = tracked;
-    while (te) {
-        object_free(te->object);
-        struct track_entry *next = te->next;
-        free(te);
-        te = next;
+static int mark(void *data) {
+    val v = (val) (object *) data;
+    if (VAL_IS_OBJECT(v)) {
+        VAL_OBJECT(v)->mark = 1;
     }
-    tracked = NULL;
+    return 0;
+}
+
+void gc_empty(Context *root) {
+    for (struct track_entry *te = tracked; te; te = te->next) {
+        te->object->mark = 0;
+    }
+
+    dict_foreach(root->env, mark);
+
+    struct track_entry **w = &tracked;
+    while (*w) {
+        if (!(*w)->object->mark) {
+            object_free((*w)->object);
+            struct track_entry *next = (*w)->next;
+            free(*w);
+            *w = next;
+        } else {
+            w = &(*w)->next;
+        }
+    }
 }
 
 // vim: set sw=4 et:
