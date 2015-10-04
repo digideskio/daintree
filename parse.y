@@ -9,7 +9,8 @@
 %error-verbose
 
 %token END_OF_FILE 0 "$end"
-%token NL PRINT LPAREN RPAREN LBRACKET RBRACKET
+%token NL PRINT
+%token K_NONE
 
 %type <stmt> stmt line
 %type <expr> expr
@@ -77,6 +78,7 @@ expr:
   | '(' expr ')' { $$ = $2; }
   | '[' opt_exprlist ']' { $$ = expr_list($2); expr_list_free($2); }
   | '{' opt_dictlist '}' { $$ = expr_dict($2); expr_list_free($2); }
+  | K_NONE { $$ = NULL; }
 ;
 
 opt_exprlist:

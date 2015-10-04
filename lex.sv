@@ -44,6 +44,9 @@ print
 \*\*
     return EXP;
 
+None
+    return K_NONE;
+
 .
     return match[0];
 

@@ -83,6 +83,10 @@ static int mark_dict(void *data, void *extra) {
 }
 
 void object_mark(object *object) {
+    if (!object) {
+        return;
+    }
+
     object->mark = 1;
 
     switch (object->type) {
@@ -110,6 +114,10 @@ void object_mark(object *object) {
 }
 
 void object_free(object *object) {
+    if (!object) {
+        return;
+    }
+
     switch (object->type) {
     case OBJECT_STRING:
         free(object->string);
@@ -229,6 +237,10 @@ static int dict_to_str_helper(void *data, void *extra) {
 static char *val_to_str(val const v) {
     if (VAL_IS_NUMBER(v)) {
         return sputf("%d", VAL_NUMBER(v));
+    }
+
+    if (!v.object) {
+        return strdup("None");
     }
 
     switch (v.object->type) {

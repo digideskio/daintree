@@ -49,6 +49,7 @@ struct expr *expr_string(char const *identifier);
 struct expr *expr_unary(enum expr_unary_type type, struct expr const *arg);
 struct expr *expr_binary(enum expr_binary_type type, struct expr const *lhs, struct expr const *rhs);
 struct expr *expr_list(struct expr_list const *expr_list);
+struct expr *expr_dict(struct expr_list const *expr_list);
 
 struct stmt {
     enum stmt_type {
