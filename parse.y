@@ -10,7 +10,7 @@
 
 %token END_OF_FILE 0 "$end"
 %token NL PRINT
-%token K_NONE
+%token K_NONE K_TRUE K_FALSE
 
 %type <stmt> stmt line
 %type <expr> expr
@@ -30,6 +30,7 @@
 %left '*' '/' '%'
 %left NEG
 %right EXP
+%left '.' '[' ']'
 
 %nonassoc <identifier> IDENTIFIER
 %nonassoc <number> NUMBER
@@ -78,7 +79,11 @@ expr:
   | '(' expr ')' { $$ = $2; }
   | '[' opt_exprlist ']' { $$ = expr_list($2); expr_list_free($2); }
   | '{' opt_dictlist '}' { $$ = expr_dict($2); expr_list_free($2); }
+  | expr '.' IDENTIFIER { $$ = expr_attr($1, $3); expr_free($1); free($3); }
+  | expr '[' expr ']' { $$ = expr_binary(EXPR_BINARY_ITEM, $1, $3); expr_free($1); expr_free($3); }
   | K_NONE { $$ = NULL; }
+  | K_TRUE { $$ = NULL; }
+  | K_FALSE { $$ = NULL; }
 ;
 
 opt_exprlist:

@@ -47,6 +47,12 @@ print
 None
     return K_NONE;
 
+True
+    return K_TRUE;
+
+False
+    return K_FALSE;
+
 .
     return match[0];
 

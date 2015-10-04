@@ -14,6 +14,7 @@ struct expr {
         EXPR_BINARY,
         EXPR_LIST,
         EXPR_DICT,
+        EXPR_ATTR,
     } type;
     union {
         int number;
@@ -33,11 +34,16 @@ struct expr {
                 EXPR_BINARY_DIVIDE,
                 EXPR_BINARY_MODULO,
                 EXPR_BINARY_EXP,
+                EXPR_BINARY_ITEM,
             } type;
             struct expr *lhs, *rhs;
         } binary;
         struct expr_list *list;
         struct expr_list *dict;
+        struct {
+            struct expr *expr;
+            char *identifier;
+        } attr;
     };
 };
 
@@ -50,6 +56,7 @@ struct expr *expr_unary(enum expr_unary_type type, struct expr const *arg);
 struct expr *expr_binary(enum expr_binary_type type, struct expr const *lhs, struct expr const *rhs);
 struct expr *expr_list(struct expr_list const *expr_list);
 struct expr *expr_dict(struct expr_list const *expr_list);
+struct expr *expr_attr(struct expr const *lhs, char const *rhs);
 
 struct stmt {
     enum stmt_type {

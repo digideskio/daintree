@@ -179,7 +179,7 @@ static val eval(struct expr const *expr, Context *context) {
             val rhs = eval(expr->binary.rhs, context);
 
             if (!VAL_IS_NUMBER(lhs) || !VAL_IS_NUMBER(rhs)) {
-                return val_number(0);
+                return (val) (object *)NULL;
             }
 
             int ln = VAL_NUMBER(lhs),
@@ -198,6 +198,9 @@ static val eval(struct expr const *expr, Context *context) {
                 return val_number(ln % rn);
             case EXPR_BINARY_EXP:
                 return val_number(powi(ln, rn));
+            case EXPR_BINARY_ITEM:
+                // TODO
+                return (val) (object *)NULL;
             }
         }
     case EXPR_STRING:
@@ -206,9 +209,12 @@ static val eval(struct expr const *expr, Context *context) {
         return (val) object_list(expr->list, context);
     case EXPR_DICT:
         return (val) object_dict(expr->dict, context);
+    case EXPR_ATTR:
+        // TODO
+        return (val) (object *)NULL;
     }
     /* ?? */
-    return (val) (uint32_t) 0;
+    return (val) (object *)NULL;
 }
 
 struct dict_to_str {

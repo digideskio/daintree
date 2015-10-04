@@ -123,6 +123,13 @@ struct expr *expr_dict(struct expr_list const *expr_list) {
     return expr;
 }
 
+struct expr *expr_attr(struct expr const *lhs, char const *rhs) {
+    struct expr *expr = expr_alloc(EXPR_ATTR);
+    expr->attr.expr = expr_copy(lhs);
+    expr->attr.identifier = strdup(rhs);
+    return expr;
+}
+
 static struct stmt *stmt_alloc(enum stmt_type type) {
     struct stmt *stmt = malloc(sizeof(*stmt));
     stmt->type = type;
