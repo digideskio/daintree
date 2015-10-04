@@ -17,7 +17,7 @@ void dict_insert(struct dict *bt, void const *key, void *data);
 void *dict_search(struct dict *bt, void const *key);
 void *dict_search_insert(struct dict *bt, void const *key, void *data);
 void dict_remove(struct dict *bt, void const *key);
-void dict_foreach(struct dict *bt, int (*fn)(void *data));
+void dict_foreach(struct dict *bt, void *extra, int (*fn)(void *data, void *extra));
 int dict_empty(struct dict const *bt);
 void dict_free(struct dict *bt);
 

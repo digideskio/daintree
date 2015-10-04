@@ -49,6 +49,39 @@ object *object_list(struct expr_list const *list, Context *context) {
     return gc_track(obj);
 }
 
+object *object_dict(struct expr_list const *dict, Context *context) {
+    object *obj = object_alloc(OBJECT_DICT);
+    obj->dict = dict_create(stringdict_crc, NULL);
+
+    while (dict) {
+        val key = eval(dict->expr, context);
+        dict = dict->next;
+
+        if (!dict) {
+            return NULL;
+        }
+
+        if (!VAL_IS_OBJECT(key) || VAL_OBJECT(key)->type != OBJECT_STRING) {
+            return NULL;
+        }
+
+        val value = eval(dict->expr, context);
+        dict = dict->next;
+
+        dict_insert(obj->dict, VAL_OBJECT(key)->string, value.object);
+    }
+
+    return obj;
+}
+
+static int mark_dict(void *data, void *extra) {
+    val v = (val) (object *) data;
+    if (VAL_IS_OBJECT(v)) {
+        object_mark(VAL_OBJECT(v));
+    }
+    return 0;
+}
+
 void object_mark(object *object) {
     object->mark = 1;
 
@@ -65,6 +98,12 @@ void object_mark(object *object) {
                 }
                 list = list->next;
             }
+            break;
+        }
+
+    case OBJECT_DICT:
+        {
+            dict_foreach(object->dict, NULL, mark_dict);
             break;
         }
     }
@@ -85,6 +124,9 @@ void object_free(object *object) {
             }
             break;
         }
+    case OBJECT_DICT:
+        dict_free(object->dict);
+        break;
     }
 
     free(object);
@@ -154,9 +196,34 @@ static val eval(struct expr const *expr, Context *context) {
         return (val) object_string(expr->string);
     case EXPR_LIST:
         return (val) object_list(expr->list, context);
+    case EXPR_DICT:
+        return (val) object_dict(expr->dict, context);
     }
     /* ?? */
     return (val) (uint32_t) 0;
+}
+
+struct dict_to_str {
+    int i;
+    struct buffer *buf;
+};
+
+static char *val_to_str(val const v);
+
+static int dict_to_str_helper(void *data, void *extra) {
+    struct dict_to_str *e = extra;
+
+    if (e->i++) {
+        append_buffer_str(e->buf, ", ");
+    }
+
+    append_buffer_str(e->buf, "?");
+    append_buffer_str(e->buf, ": ");
+    char *r = val_to_str((val) (object *)data);
+    append_buffer_str(e->buf, r);
+    free(r);
+
+    return 0;
 }
 
 static char *val_to_str(val const v) {
@@ -183,6 +250,19 @@ static char *val_to_str(val const v) {
                 free(x);
             }
             append_buffer_char(buf, ']');
+            char *r = strndup(buf->buffer, buf->used);
+            free_buffer(buf);
+            return r;
+        }
+
+    case OBJECT_DICT:
+        {
+            struct buffer *buf = alloc_buffer();
+            append_buffer_char(buf, '{');
+
+            struct dict_to_str e = { 0, buf };
+            dict_foreach(v.object->dict, &e, dict_to_str_helper);
+            append_buffer_char(buf, '}');
             char *r = strndup(buf->buffer, buf->used);
             free_buffer(buf);
             return r;

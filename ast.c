@@ -27,6 +27,10 @@ void expr_free(struct expr *expr) {
         expr_list_free(expr->list);
         break;
 
+    case EXPR_DICT:
+        expr_list_free(expr->dict);
+        break;
+
     default:
         /* do nothing */
         break;
@@ -59,6 +63,9 @@ struct expr *expr_copy(struct expr const *expr) {
         break;
     case EXPR_LIST:
         copy->list = expr_list_copy(expr->list);
+        break;
+    case EXPR_DICT:
+        copy->dict = expr_list_copy(expr->dict);
         break;
     }
 
@@ -107,6 +114,12 @@ struct expr *expr_binary(enum expr_binary_type type, struct expr const *lhs, str
 struct expr *expr_list(struct expr_list const *expr_list) {
     struct expr *expr = expr_alloc(EXPR_LIST);
     expr->list = expr_list_copy(expr_list);
+    return expr;
+}
+
+struct expr *expr_dict(struct expr_list const *expr_list) {
+    struct expr *expr = expr_alloc(EXPR_DICT);
+    expr->dict = expr_list_copy(expr_list);
     return expr;
 }
 

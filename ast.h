@@ -13,6 +13,7 @@ struct expr {
         EXPR_UNARY,
         EXPR_BINARY,
         EXPR_LIST,
+        EXPR_DICT,
     } type;
     union {
         int number;
@@ -36,6 +37,7 @@ struct expr {
             struct expr *lhs, *rhs;
         } binary;
         struct expr_list *list;
+        struct expr_list *dict;
     };
 };
 

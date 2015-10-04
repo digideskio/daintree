@@ -29,11 +29,13 @@ typedef struct object_struct {
     enum object_type {
         OBJECT_STRING,
         OBJECT_LIST,
+        OBJECT_DICT,
     } type;
     uint8_t mark;
     union {
         char *string;
         struct val_list *list;
+        struct dict *dict;
     };
 } object;
 

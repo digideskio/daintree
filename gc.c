@@ -20,7 +20,7 @@ object *gc_track(object *object) {
     return object;
 }
 
-static int mark(void *data) {
+static int mark(void *data, void *extra) {
     val v = (val) (object *) data;
     if (VAL_IS_OBJECT(v)) {
         object_mark(VAL_OBJECT(v));
@@ -33,7 +33,7 @@ void gc_empty(Context *root) {
         te->object->mark = 0;
     }
 
-    dict_foreach(root->env, mark);
+    dict_foreach(root->env, NULL, mark);
 
     struct track_entry **w = &tracked;
     while (*w) {

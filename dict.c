@@ -258,24 +258,26 @@ void dict_remove(struct dict *bt, const void *key) {
     }
 }
 
-static int _foreach(struct _node *node, int (*fn)(void *data)) {
-    if (node->link[0] && _foreach(node->link[0], fn)) {
+static int _foreach(struct _node *node, void *extra, int (*fn)(void *data, void *extra)) {
+    if (node->link[0] && _foreach(node->link[0], extra, fn)) {
         return 1;
     }
 
-    if (fn(node->data)) {
+    if (fn(node->data, extra)) {
         return 1;
     }
 
-    if (node->link[1] && _foreach(node->link[1], fn)) {
+    if (node->link[1] && _foreach(node->link[1], extra, fn)) {
         return 1;
     }
 
     return 0;
 }
 
-void dict_foreach(struct dict *bt, int (*fn)(void *data)) {
-    _foreach(bt->root, fn);
+void dict_foreach(struct dict *bt, void *extra, int (*fn)(void *data, void *extra)) {
+    if (bt->root) {
+        _foreach(bt->root, extra, fn);
+    }
 }
 
 int dict_empty(const struct dict *bt) {

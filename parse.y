@@ -14,6 +14,7 @@
 %type <stmt> stmt line
 %type <expr> expr
 %type <exprlist> exprlist opt_exprlist
+%type <exprlist> dictlist opt_dictlist
 
 %left LOGICAL_AND LOGICAL_OR
 %left LOGICAL_NOT
@@ -75,6 +76,7 @@ expr:
   | '-' expr %prec NEG  { $$ = expr_unary(EXPR_UNARY_NEG, $2); expr_free($2); }
   | '(' expr ')' { $$ = $2; }
   | '[' opt_exprlist ']' { $$ = expr_list($2); expr_list_free($2); }
+  | '{' opt_dictlist '}' { $$ = expr_dict($2); expr_list_free($2); }
 ;
 
 opt_exprlist:
@@ -84,7 +86,19 @@ opt_exprlist:
 ;
 
 exprlist:
-    expr { $$ = NULL; expr_list_append(&$$, $1); expr_free($1); }
+    expr              { $$ = NULL; expr_list_append(&$$, $1); expr_free($1); }
   | exprlist ',' expr { expr_list_append(&$1, $3); $$ = $1; expr_free($3); }
+;
+
+opt_dictlist:
+    /* empty */  { $$ = NULL; }
+  | dictlist     { $$ = $1; }
+  | dictlist ',' { $$ = $1; }
+;
+
+dictlist:
+    expr ':' expr              { $$ = NULL; expr_list_append(&$$, $1); expr_list_append(&$$, $3); expr_free($1); expr_free($3); }
+  | dictlist ',' expr ':' expr { expr_list_append(&$1, $3); expr_list_append(&$1, $5); $$ = $1; expr_free($3); expr_free($5); }
+;
 
 /* vim: set sw=4 et: */
