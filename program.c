@@ -49,6 +49,27 @@ object *object_list(struct expr_list const *list, Context *context) {
     return gc_track(obj);
 }
 
+void object_mark(object *object) {
+    object->mark = 1;
+
+    switch (object->type) {
+    case OBJECT_STRING:
+        break;
+
+    case OBJECT_LIST:
+        {
+            struct val_list *list = object->list;
+            while (list) {
+                if (VAL_IS_OBJECT(list->value)) {
+                    object_mark(VAL_OBJECT(list->value));
+                }
+                list = list->next;
+            }
+            break;
+        }
+    }
+}
+
 void object_free(object *object) {
     switch (object->type) {
     case OBJECT_STRING:

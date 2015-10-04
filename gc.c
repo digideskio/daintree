@@ -23,7 +23,7 @@ object *gc_track(object *object) {
 static int mark(void *data) {
     val v = (val) (object *) data;
     if (VAL_IS_OBJECT(v)) {
-        VAL_OBJECT(v)->mark = 1;
+        object_mark(VAL_OBJECT(v));
     }
     return 0;
 }
