@@ -178,29 +178,50 @@ static val eval(struct expr const *expr, Context *context) {
             val lhs = eval(expr->binary.lhs, context);
             val rhs = eval(expr->binary.rhs, context);
 
-            if (!VAL_IS_NUMBER(lhs) || !VAL_IS_NUMBER(rhs)) {
-                return (val) (object *)NULL;
-            }
-
             int ln = VAL_NUMBER(lhs),
                 rn = VAL_NUMBER(rhs);
 
             switch (expr->binary.type) {
             case EXPR_BINARY_PLUS:
+                if (!VAL_IS_NUMBER(lhs) || !VAL_IS_NUMBER(rhs)) {
+                    return (val) (object *)NULL;
+                }
                 return val_number(ln + rn);
             case EXPR_BINARY_TIMES:
+                if (!VAL_IS_NUMBER(lhs) || !VAL_IS_NUMBER(rhs)) {
+                    return (val) (object *)NULL;
+                }
                 return val_number(ln * rn);
             case EXPR_BINARY_MINUS:
+                if (!VAL_IS_NUMBER(lhs) || !VAL_IS_NUMBER(rhs)) {
+                    return (val) (object *)NULL;
+                }
                 return val_number(ln - rn);
             case EXPR_BINARY_DIVIDE:
+                if (!VAL_IS_NUMBER(lhs) || !VAL_IS_NUMBER(rhs)) {
+                    return (val) (object *)NULL;
+                }
                 return val_number(ln / rn);
             case EXPR_BINARY_MODULO:
+                if (!VAL_IS_NUMBER(lhs) || !VAL_IS_NUMBER(rhs)) {
+                    return (val) (object *)NULL;
+                }
                 return val_number(ln % rn);
             case EXPR_BINARY_EXP:
+                if (!VAL_IS_NUMBER(lhs) || !VAL_IS_NUMBER(rhs)) {
+                    return (val) (object *)NULL;
+                }
                 return val_number(powi(ln, rn));
             case EXPR_BINARY_ITEM:
-                // TODO
-                return (val) (object *)NULL;
+                if (!VAL_IS_OBJECT(lhs) || VAL_OBJECT(lhs)->type != OBJECT_DICT) {
+                    return (val) (object *)NULL;
+                }
+                // TODO: temp.
+                if (!VAL_IS_OBJECT(rhs) || VAL_OBJECT(rhs)->type != OBJECT_STRING) {
+                    return (val) (object *)NULL;
+                }
+                void *value = dict_search(VAL_OBJECT(lhs)->dict, VAL_OBJECT(rhs)->string);
+                return (val) (object *)value;
             }
         }
     case EXPR_STRING:
