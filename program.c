@@ -45,6 +45,7 @@ object *object_list(struct expr_list const *list, Context *context) {
         *ptr = malloc(sizeof(**ptr));
         (*ptr)->value = eval(list->expr, context);
         ptr = &(*ptr)->next;
+        *ptr = NULL;
         list = list->next;
     }
     return obj;
@@ -126,12 +127,22 @@ static char *val_to_str(val const v) {
 
     switch (v.object->type) {
     case OBJECT_STRING:
-        return strdup(v.object->string);
+        // TODO: escaping
+        return sputf("\"%s\"", v.object->string);
 
     case OBJECT_LIST:
         {
             struct buffer *buf = alloc_buffer();
             append_buffer_char(buf, '[');
+            int i = 0;
+            for (struct val_list *list = v.object->list; list; list = list->next) {
+                if (i++) {
+                    append_buffer_str(buf, ", ");
+                }
+                char *x = val_to_str(list->value);
+                append_buffer_str(buf, x);
+                free(x);
+            }
             append_buffer_char(buf, ']');
             char *r = strndup(buf->buffer, buf->used);
             free_buffer(buf);
